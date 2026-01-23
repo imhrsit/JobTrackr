@@ -17,8 +17,8 @@ const envSchema = z.object({
         .min(32, "NEXTAUTH_SECRET must be at least 32 characters long"),
 
     // OAuth (optional)
-    GOOGLE_CLIENT_ID: z.string().optional(),
-    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    GOOGLE_CLIENT_ID: z.string().default(""),
+    GOOGLE_CLIENT_SECRET: z.string().default(""),
 
     // App
     NODE_ENV: z
