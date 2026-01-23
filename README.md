@@ -34,3 +34,37 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Database Setup
+
+This project uses PostgreSQL as the database. Make sure to have it installed and running on your local machine.
+
+### Environment Variables
+
+Create a `.env.local` file in the root of the project and add the following:
+
+```dotenv
+DATABASE_URL="postgresql://<username>:<password>@localhost:5432/jobtrackr"
+```
+
+Replace `<username>` and `<password>` with your PostgreSQL credentials.
+
+### Seeding the Database
+
+To seed the database with initial data, run:
+
+```bash
+npm run db:seed
+```
+
+This will create a demo user and populate the database with sample skills and jobs.
+
+## Prisma Client
+
+The project uses Prisma as an ORM. To generate the Prisma Client, run:
+
+```bash
+npm run db:generate
+```
+
+This will generate the client based on the schema defined in `prisma/schema.prisma`.

@@ -1,0 +1,261 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum WorkMode {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  REFERRED
+  INTERVIEWING
+  OFFERED
+  REJECTED
+}
+
+enum InterviewType {
+  PHONE
+  VIDEO
+  ONSITE
+  TECHNICAL
+  BEHAVIORAL
+  HR
+  FINAL
+}
+
+enum ReferralStatus {
+  NOT_ASKED
+  ASKED
+  PENDING
+  RECEIVED
+  DECLINED
+}
+
+enum ProficiencyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String // hashed with bcrypt
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts     Account[]
+  jobs         Job[]
+  applications Application[]
+  userSkills   UserSkill[]
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// ============================================================================
+// JOB & APPLICATION TRACKING
+// ============================================================================
+
+model Job {
+  id             String    @id @default(cuid())
+  userId         String
+  title          String
+  company        String
+  location       String?
+  salaryMin      Int?
+  salaryMax      Int?
+  salaryCurrency String    @default("USD")
+  workMode       WorkMode
+  jobUrl         String?
+  description    String?   @db.Text
+  requirements   String?   @db.Text
+  postedDate     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Application?
+  jobSkills   JobSkill[]
+
+  @@index([userId])
+  @@index([company])
+  @@index([createdAt])
+}
+
+model Application {
+  id            String            @id @default(cuid())
+  userId        String
+  jobId         String            @unique
+  status        ApplicationStatus @default(SAVED)
+  appliedDate   DateTime?
+  resumeVersion String?
+  coverLetter   String?           @db.Text
+  notes         String?           @db.Text
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  // Relations
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job        Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  referrals  Referral[]
+  interviews Interview[]
+  activities Activity[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([appliedDate])
+}
+
+// ============================================================================
+// REFERRALS
+// ============================================================================
+
+model Referral {
+  id            String         @id @default(cuid())
+  applicationId String
+  contactName   String
+  relationship  String? // e.g., "Former colleague", "LinkedIn connection"
+  company       String?
+  status        ReferralStatus @default(NOT_ASKED)
+  dateAsked     DateTime?
+  followUpDate  DateTime?
+  notes         String?        @db.Text
+  response      String?        @db.Text
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+// ============================================================================
+// INTERVIEWS
+// ============================================================================
+
+model Interview {
+  id              String        @id @default(cuid())
+  applicationId   String
+  interviewDate   DateTime
+  interviewType   InterviewType
+  interviewerName String?
+  location        String? // can be URL for video or physical address
+  notes           String?       @db.Text
+  outcome         String?
+  completed       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([interviewDate])
+}
+
+// ============================================================================
+// SKILLS TRACKING
+// ============================================================================
+
+model Skill {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String? // e.g., "Programming", "Tools", "Soft Skills"
+  createdAt DateTime @default(now())
+
+  // Relations
+  jobSkills  JobSkill[]
+  userSkills UserSkill[]
+}
+
+model JobSkill {
+  jobId      String
+  skillId    String
+  isRequired Boolean @default(true)
+
+  // Relations
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, skillId])
+}
+
+model UserSkill {
+  userId           String
+  skillId          String
+  proficiencyLevel ProficiencyLevel
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([userId, skillId])
+}
+
+// ============================================================================
+// ACTIVITY (TIMELINE)
+// ============================================================================
+
+model Activity {
+  id            String   @id @default(cuid())
+  applicationId String
+  activityType  String // e.g., "status_changed", "referral_added", "note_added"
+  description   String
+  metadata      Json? // for storing additional data
+  createdAt     DateTime @default(now())
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([createdAt])
+}
