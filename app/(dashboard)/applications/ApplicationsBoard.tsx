@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     Plus,
@@ -27,6 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { NoApplicationsYet, NoResults } from "@/components/ui/empty-state";
 import { STATUS_CONFIG } from "@/components/applications/KanbanColumn";
 import { KanbanBoard } from "@/components/applications/KanbanBoard";
+import { JobDialog } from "@/components/jobs/JobDialog";
 import type {
     ApplicationCard as ApplicationCardData,
     ApplicationsResponse,
@@ -79,6 +79,7 @@ export default function ApplicationsBoard() {
         const s = searchParams.get("status");
         return s ? (s.split(",") as ApplicationStatus[]) : [];
     });
+    const [jobDialogOpen, setJobDialogOpen] = useState(false);
 
     // Sync filters to URL
     useEffect(() => {
@@ -163,11 +164,9 @@ export default function ApplicationsBoard() {
                         </p>
                     )}
                 </div>
-                <Button asChild>
-                    <Link href="/dashboard/jobs/new">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Job
-                    </Link>
+                <Button onClick={() => setJobDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Job
                 </Button>
             </div>
 
@@ -326,6 +325,12 @@ export default function ApplicationsBoard() {
                     queryKey={applicationsQueryKey}
                 />
             )}
+
+            {/* ======== Job Dialog ======== */}
+            <JobDialog
+                open={jobDialogOpen}
+                onClose={() => setJobDialogOpen(false)}
+            />
         </div>
     );
 }

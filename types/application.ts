@@ -34,6 +34,13 @@ export interface ApplicationCard {
 export interface ApplicationsResponse {
     applications: ApplicationCard[];
     total: number;
+    metadata?: {
+        total: number;
+        page: number;
+        pages: number;
+        limit: number;
+        hasMore: boolean;
+    };
 }
 
 export interface UpdateStatusPayload {

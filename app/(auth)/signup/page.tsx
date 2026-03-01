@@ -27,7 +27,7 @@ const signupSchema = z.object({
         .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string(),
     acceptTerms: z.literal(true, {
-        errorMap: () => ({ message: "You must accept the terms and conditions" }),
+        message: "You must accept the terms and conditions",
     }),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -66,8 +66,9 @@ export default function SignupPage() {
         watch,
         formState: { errors, isSubmitting },
     } = useForm<SignupFormData>({
-        resolver: zodResolver(signupSchema),
-        defaultValues: { acceptTerms: false },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(signupSchema) as any,
+        defaultValues: { acceptTerms: false as any },
     });
 
     const password = watch("password", "");
@@ -383,7 +384,7 @@ export default function SignupPage() {
                                     render={({ field }) => (
                                         <Checkbox
                                             id="acceptTerms"
-                                            checked={field.value}
+                                            checked={field.value === true}
                                             onCheckedChange={field.onChange}
                                             disabled={isLoading}
                                         />
