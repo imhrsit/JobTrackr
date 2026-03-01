@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import React, { useState, useCallback, useRef } from "react";
 import {
     DndContext,
@@ -120,6 +122,7 @@ export const KanbanBoard = React.memo(function KanbanBoard({
     queryKey,
 }: KanbanBoardProps) {
     const queryClient = useQueryClient();
+    const router = useRouter();
 
     // ---- Drag state ----
     const [activeCard, setActiveCard] = useState<ApplicationCardData | null>(null);
@@ -279,6 +282,7 @@ export const KanbanBoard = React.memo(function KanbanBoard({
                                     <ApplicationCard
                                         application={card}
                                         isDragging={activeCard?.id === card.id}
+                                        onClick={() => router.push(`/jobs/${card.id}`)}
                                     />
                                 </KanbanSortableItem>
                             ))}
@@ -290,7 +294,11 @@ export const KanbanBoard = React.memo(function KanbanBoard({
             {/* Drag overlay — rendered outside column flow for smooth visuals */}
             <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
                 {activeCard && (
-                    <ApplicationCard application={activeCard} isOverlay />
+                    <ApplicationCard
+                        application={activeCard}
+                        isDragging
+                        onClick={() => router.push(`/jobs/${activeCard.id}`)}
+                    />
                 )}
             </DragOverlay>
         </DndContext>

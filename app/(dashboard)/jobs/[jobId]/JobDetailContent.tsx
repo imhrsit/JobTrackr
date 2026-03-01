@@ -59,6 +59,7 @@ import type {
     ReferralStatus,
     InterviewType,
 } from "@prisma/client";
+import { ReferralsTab } from "@/components/applications/tabs/ReferralsTab";
 
 // ============================================================================
 // Types
@@ -840,83 +841,10 @@ export default function JobDetailContent({
                     REFERRALS TAB
                 ============================================================ */}
                 <TabsContent value="referrals" className="mt-4">
-                    {application.referrals.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="p-4 rounded-full bg-muted mb-4">
-                                <Users className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                            <h3 className="font-semibold mb-1">
-                                No referrals yet
-                            </h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Track your referral requests to stay organized
-                            </p>
-                            <Button
-                                size="sm"
-                                onClick={() =>
-                                    toast.info("Add referral coming soon")
-                                }
-                            >
-                                <Plus className="h-4 w-4 mr-1.5" />
-                                Add Referral
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {application.referrals.map((ref) => (
-                                <Card key={ref.id}>
-                                    <CardContent className="p-4">
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <p className="font-medium">
-                                                    {ref.contactName}
-                                                </p>
-                                                {ref.relationship && (
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {ref.relationship}
-                                                        {ref.company &&
-                                                            ` at ${ref.company}`}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <Badge
-                                                className={`${REFERRAL_STATUS_COLORS[ref.status]} border-0`}
-                                            >
-                                                {ref.status.replace("_", " ")}
-                                            </Badge>
-                                        </div>
-                                        {ref.notes && (
-                                            <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">
-                                                {ref.notes}
-                                            </p>
-                                        )}
-                                        <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
-                                            {ref.dateAsked && (
-                                                <span>
-                                                    Asked:{" "}
-                                                    {format(
-                                                        new Date(ref.dateAsked),
-                                                        "MMM d"
-                                                    )}
-                                                </span>
-                                            )}
-                                            {ref.followUpDate && (
-                                                <span>
-                                                    Follow up:{" "}
-                                                    {format(
-                                                        new Date(
-                                                            ref.followUpDate
-                                                        ),
-                                                        "MMM d"
-                                                    )}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
+                    <ReferralsTab
+                        applicationId={application.id}
+                        initialReferrals={application.referrals}
+                    />
                 </TabsContent>
 
                 {/* ============================================================

@@ -19,14 +19,14 @@ import { signOut } from "next-auth/react";
 
 const mainNav = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/dashboard/applications", label: "Applications", icon: Briefcase },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/dashboard/profile", label: "Profile", icon: User },
+  { href: "/applications", label: "Applications", icon: Briefcase },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 const bottomNav = [
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  { href: "/dashboard/help", label: "Help & Feedback", icon: HelpCircle },
+  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/help", label: "Help & Feedback", icon: HelpCircle },
 ];
 
 interface SidebarProps {

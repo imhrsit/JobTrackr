@@ -131,13 +131,13 @@ export default function DashboardContent({ userName }: DashboardContentProps) {
                 </div>
                 <div className="flex gap-3">
                     <Button asChild>
-                        <Link href="/dashboard/jobs/new">
+                        <Link href="/jobs/new">
                             <Plus className="mr-2 h-4 w-4" />
                             Add New Job
                         </Link>
                     </Button>
                     <Button variant="outline" asChild>
-                        <Link href="/dashboard/jobs/import">
+                        <Link href="/jobs/import">
                             <LinkIcon className="mr-2 h-4 w-4" />
                             Import from URL
                         </Link>
@@ -315,7 +315,7 @@ function RecentApplications({
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Recent Applications</CardTitle>
                 <Button variant="ghost" size="sm" asChild>
-                    <Link href="/dashboard/applications">
+                    <Link href="/applications">
                         View All
                         <ArrowUpRight className="ml-1 h-3 w-3" />
                     </Link>
@@ -367,12 +367,12 @@ function RecentApplications({
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-1">
                                             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                                <Link href={`/dashboard/applications/${app.id}`}>
+                                                <Link href={`/jobs/${app.id}`}>
                                                     <Eye className="h-3.5 w-3.5" />
                                                 </Link>
                                             </Button>
                                             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                                <Link href={`/dashboard/applications/${app.id}/edit`}>
+                                                <Link href={`/jobs/${app.id}`}>
                                                     <Pencil className="h-3.5 w-3.5" />
                                                 </Link>
                                             </Button>
@@ -463,7 +463,7 @@ function UpcomingInterviews({
                             <div className="flex gap-1 shrink-0">
                                 <Button variant="ghost" size="sm" className="h-8 text-xs" asChild>
                                     <Link
-                                        href={`/dashboard/applications/${interview.application.id}`}
+                                        href={`/jobs/${interview.application.id}`}
                                     >
                                         Details
                                     </Link>
@@ -607,7 +607,7 @@ function GettingStartedGuide() {
             icon: Plus,
             title: "Add your first job",
             description: "Save a job listing you're interested in to start tracking it.",
-            href: "/dashboard/jobs/new",
+            href: "/jobs/new",
             cta: "Add a Job",
             color: "bg-blue-500/10 text-blue-600",
         },
@@ -616,7 +616,7 @@ function GettingStartedGuide() {
             title: "Track your application",
             description:
                 "Update the status as you move through the application process.",
-            href: "/dashboard/applications",
+            href: "/applications",
             cta: "View Pipeline",
             color: "bg-amber-500/10 text-amber-600",
         },
@@ -625,7 +625,7 @@ function GettingStartedGuide() {
             title: "Prepare for interviews",
             description:
                 "Schedule interviews and set reminders so you never miss one.",
-            href: "/dashboard/interviews",
+            href: "/interviews",
             cta: "Manage Interviews",
             color: "bg-purple-500/10 text-purple-600",
         },

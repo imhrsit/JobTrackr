@@ -87,7 +87,7 @@ export default function ApplicationsBoard() {
         if (debouncedSearch) params.set("search", debouncedSearch);
         if (statusFilter.length > 0) params.set("status", statusFilter.join(","));
         const qs = params.toString();
-        router.replace(`/dashboard/applications${qs ? `?${qs}` : ""}`, {
+        router.replace(`/applications${qs ? `?${qs}` : ""}`, {
             scroll: false,
         });
     }, [debouncedSearch, statusFilter, router]);
@@ -296,7 +296,7 @@ export default function ApplicationsBoard() {
             {/* ======== Empty States ======== */}
             {isEmpty && (
                 <NoApplicationsYet
-                    onAction={() => router.push("/dashboard/jobs/new")}
+                    onAction={() => router.push("/jobs/new")}
                 />
             )}
             {isFilteredEmpty && <NoResults onAction={clearFilters} />}

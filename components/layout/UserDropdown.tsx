@@ -149,7 +149,7 @@ export function UserDropdown({ align = "end" }: UserDropdownProps) {
                 <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
                         <Link
-                            href="/dashboard/profile"
+                            href="/profile"
                             className="flex items-center gap-2 cursor-pointer"
                         >
                             <User className="h-4 w-4 text-muted-foreground" />
@@ -158,7 +158,7 @@ export function UserDropdown({ align = "end" }: UserDropdownProps) {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                         <Link
-                            href="/dashboard/settings"
+                            href="/settings"
                             className="flex items-center gap-2 cursor-pointer"
                         >
                             <Settings className="h-4 w-4 text-muted-foreground" />

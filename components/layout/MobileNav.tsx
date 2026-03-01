@@ -2,14 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Briefcase, BarChart3, User } from "lucide-react";
+import { Home, Briefcase, BarChart3, User, Settings, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/dashboard/applications", label: "Applications", icon: Briefcase },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/dashboard/profile", label: "Profile", icon: User },
+  { href: "/applications", label: "Applications", icon: Briefcase },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/profile", label: "Profile", icon: User },
+];
+
+const bottomNav = [
+  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/help", label: "Help & Feedback", icon: HelpCircle },
 ];
 
 export function MobileNav() {
