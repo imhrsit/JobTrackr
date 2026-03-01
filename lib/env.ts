@@ -16,10 +16,6 @@ const envSchema = z.object({
         .string()
         .min(32, "NEXTAUTH_SECRET must be at least 32 characters long"),
 
-    // OAuth (optional)
-    GOOGLE_CLIENT_ID: z.string().default(""),
-    GOOGLE_CLIENT_SECRET: z.string().default(""),
-
     // App
     NODE_ENV: z
         .enum(["development", "production", "test"])
@@ -32,8 +28,6 @@ function validateEnv() {
             DATABASE_URL: process.env.DATABASE_URL,
             NEXTAUTH_URL: process.env.NEXTAUTH_URL,
             NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-            GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-            GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
             NODE_ENV: process.env.NODE_ENV,
         });
 

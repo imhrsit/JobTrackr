@@ -1,2 +1,6 @@
-export { authOptions } from "./auth";
-export { hashPassword, verifyPassword, getServerSession, requireAuth } from "./auth-utils";
+export {
+  authOptions,
+  getServerSession,
+  requireAuth,
+} from "../auth";
+export { hashPassword, verifyPassword } from "../auth-utils";

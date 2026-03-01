@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "./auth-utils";
+import { getServerSession } from "./auth";
 
 export async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
   const userIdHeader = request.headers.get("x-user-id");

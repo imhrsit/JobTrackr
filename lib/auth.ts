@@ -1,9 +1,21 @@
-import type { NextAuthOptions } from "next-auth";
+import type { NextAuthOptions, Session } from "next-auth";
+import { getServerSession as getNextAuthServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
 import { verifyPassword } from "./auth-utils";
 import { env } from "./env";
+
+export async function getServerSession(): Promise<Session | null> {
+  return await getNextAuthServerSession(authOptions);
+}
+
+export async function requireAuth(): Promise<Session> {
+  const session = await getServerSession();
+  if (!session || !session.user) {
+    throw new Error("Unauthorized - You must be logged in to access this resource");
+  }
+  return session;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,7 +27,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
+          return null;
         }
 
         const user = await prisma.user.findUnique({
@@ -23,13 +35,12 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
-          throw new Error("Invalid email or password");
+          return null;
         }
 
-        const isValidPassword = await verifyPassword(credentials.password, user.password);
-
-        if (!isValidPassword) {
-          throw new Error("Invalid email or password");
+        const isValid = await verifyPassword(credentials.password, user.password);
+        if (!isValid) {
+          return null;
         }
 
         return {
@@ -40,40 +51,13 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-    GoogleProvider({
-      clientId: env.GOOGLE_CLIENT_ID || "",
-      clientSecret: env.GOOGLE_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
-    }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.userId = user.id;
         token.email = user.email;
       }
-
-      if (account?.provider === "google" && user?.email) {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email },
-        });
-
-        if (!existingUser) {
-          const newUser = await prisma.user.create({
-            data: {
-              email: user.email,
-              name: user.name,
-              image: user.image,
-              emailVerified: new Date(),
-              password: "",
-            },
-          });
-          token.userId = newUser.id;
-        } else {
-          token.userId = existingUser.id;
-        }
-      }
-
       return token;
     },
     async session({ session, token }) {
@@ -83,22 +67,10 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async signIn({ user, account }) {
-      if (account?.provider === "credentials") {
-        return true;
-      }
-
-      if (account?.provider === "google" && user.email) {
-        return true;
-      }
-
-      return false;
-    },
   },
   pages: {
     signIn: "/login",
     error: "/login",
-    newUser: "/dashboard",
   },
   session: {
     strategy: "jwt",

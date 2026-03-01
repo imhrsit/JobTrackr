@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const publicRoutes = ["/", "/login", "/signup", "/forgot-password", "/terms", "/privacy"];
-const authRoutes = ["/login", "/signup", "/forgot-password"];
+const publicRoutes = ["/", "/login", "/signup", "/terms", "/privacy"];
+const authRoutes = ["/login", "/signup"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -70,6 +70,5 @@ export const config = {
     "/(auth)/:path*",
     "/login",
     "/signup",
-    "/forgot-password",
   ],
 };

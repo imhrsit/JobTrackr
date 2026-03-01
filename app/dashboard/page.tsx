@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth-utils";
+import { requireAuth } from "@/lib/auth";
 
 export default async function DashboardPage() {
   const session = await requireAuth();
