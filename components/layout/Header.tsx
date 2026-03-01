@@ -2,28 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { Menu, Search, Bell, User, Settings, LogOut } from "lucide-react";
+import { Menu, Search, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { UserDropdown } from "./UserDropdown";
 
 interface HeaderProps {
   onMenuClick?: () => void;
-  user?: {
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-  };
   notificationCount?: number;
 }
 
@@ -40,7 +26,7 @@ function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
   return crumbs;
 }
 
-export function Header({ onMenuClick, user, notificationCount = 0 }: HeaderProps) {
+export function Header({ onMenuClick, notificationCount = 0 }: HeaderProps) {
   const pathname = usePathname();
   const breadcrumbs = getBreadcrumbs(pathname);
 
@@ -90,50 +76,9 @@ export function Header({ onMenuClick, user, notificationCount = 0 }: HeaderProps
           )}
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={user?.image ?? undefined} alt={user?.name ?? ""} />
-                <AvatarFallback>
-                  {(user?.name ?? user?.email ?? "U").charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div className="flex flex-col">
-                <span>{user?.name ?? "User"}</span>
-                {user?.email && (
-                  <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
-                )}
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/profile" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                View profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/settings" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Settings
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="flex items-center gap-2 text-destructive focus:text-destructive"
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
-              <LogOut className="h-4 w-4" />
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <UserDropdown />
       </div>
     </header>
   );
 }
+

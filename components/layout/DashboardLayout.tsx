@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
-import { useSession } from "next-auth/react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { MobileNav } from "./MobileNav";
@@ -14,7 +13,6 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, applicationCount = 0 }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { data: session } = useSession();
 
   useEffect(() => {
     const handleResize = () => {
@@ -65,7 +63,6 @@ export function DashboardLayout({ children, applicationCount = 0 }: DashboardLay
       <div className="flex flex-1 flex-col md:pl-64">
         <Header
           onMenuClick={() => setSidebarOpen((o) => !o)}
-          user={session?.user}
           notificationCount={0}
         />
         <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
@@ -76,3 +73,4 @@ export function DashboardLayout({ children, applicationCount = 0 }: DashboardLay
     </div>
   );
 }
+
