@@ -14,12 +14,16 @@ const querySchema = z.object({
     workMode: z.enum(["REMOTE", "HYBRID", "ONSITE"]).optional(),
     salaryMin: z.coerce.number().int().positive().optional(),
     salaryMax: z.coerce.number().int().positive().optional(),
-    dateFrom: z.string().datetime({ offset: true }).optional(),
-    dateTo: z.string().datetime({ offset: true }).optional(),
+    location: z.string().optional(),
+    companies: z.string().optional(), // comma-separated company names
+    dateFrom: z.string().optional(),
+    dateTo: z.string().optional(),
     sortBy: z
         .enum(["createdAt", "appliedDate", "company", "title"])
         .default("createdAt"),
     sortOrder: z.enum(["asc", "desc"]).default("desc"),
+    hasReferral: z.string().optional(),
+    hasInterview: z.string().optional(),
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().max(100).default(50),
 });
@@ -51,55 +55,76 @@ export async function GET(request: NextRequest) {
 
         // ---- Build where clause ----
         const where: Prisma.ApplicationWhereInput = { userId };
+        // Collect AND conditions so each filter composes cleanly
+        const and: Prisma.ApplicationWhereInput[] = [];
 
         // Status filter
         if (query.status && query.status !== "all") {
-            const statuses = query.status.split(",");
-            const valid = statuses.filter((s) =>
-                (VALID_STATUSES as readonly string[]).includes(s)
-            );
+            const valid = query.status
+                .split(",")
+                .filter((s) => (VALID_STATUSES as readonly string[]).includes(s));
             if (valid.length > 0) {
                 where.status = { in: valid as any };
             }
         }
 
-        // Date range filter
+        // Date range filter (on application.createdAt)
         if (query.dateFrom || query.dateTo) {
-            where.createdAt = {};
-            if (query.dateFrom) where.createdAt.gte = new Date(query.dateFrom);
-            if (query.dateTo) where.createdAt.lte = new Date(query.dateTo);
+            const createdAt: Prisma.DateTimeFilter = {};
+            if (query.dateFrom) createdAt.gte = new Date(query.dateFrom);
+            if (query.dateTo) createdAt.lte = new Date(query.dateTo);
+            and.push({ createdAt });
         }
 
-        // Job-level filters: search, workMode, salary
-        const jobWhere: Prisma.JobWhereInput = {};
-        let hasJobFilter = false;
-
+        // Full-text search: title, company (job), and notes (application)
         if (query.search) {
-            hasJobFilter = true;
-            jobWhere.OR = [
-                { title: { contains: query.search, mode: "insensitive" } },
-                { company: { contains: query.search, mode: "insensitive" } },
-            ];
+            and.push({
+                OR: [
+                    { notes: { contains: query.search, mode: "insensitive" } },
+                    { job: { title: { contains: query.search, mode: "insensitive" } } },
+                    { job: { company: { contains: query.search, mode: "insensitive" } } },
+                ],
+            });
         }
 
+        // Work mode (exact match on related job)
         if (query.workMode) {
-            hasJobFilter = true;
-            jobWhere.workMode = query.workMode;
+            and.push({ job: { workMode: query.workMode } });
         }
 
+        // Salary range — overlapping range check:
+        //   job.salaryMax >= salaryMin  AND  job.salaryMin <= salaryMax
         if (query.salaryMin !== undefined) {
-            hasJobFilter = true;
-            jobWhere.salaryMax = { gte: query.salaryMin };
+            and.push({ job: { salaryMax: { gte: query.salaryMin } } });
         }
-
         if (query.salaryMax !== undefined) {
-            hasJobFilter = true;
-            jobWhere.salaryMin = { lte: query.salaryMax };
+            and.push({ job: { salaryMin: { lte: query.salaryMax } } });
         }
 
-        if (hasJobFilter) {
-            where.job = jobWhere;
+        // Location filter (partial, case-insensitive)
+        if (query.location) {
+            and.push({
+                job: { location: { contains: query.location, mode: "insensitive" } },
+            });
         }
+
+        // Companies filter (exact list)
+        if (query.companies) {
+            const companies = query.companies.split(",").filter(Boolean);
+            if (companies.length > 0) {
+                and.push({ job: { company: { in: companies } } });
+            }
+        }
+
+        // Has referral / interview
+        if (query.hasReferral === "1") {
+            and.push({ referrals: { some: {} } });
+        }
+        if (query.hasInterview === "1") {
+            and.push({ interviews: { some: {} } });
+        }
+
+        if (and.length > 0) where.AND = and;
 
         // ---- Sorting ----
         let orderBy: Prisma.ApplicationOrderByWithRelationInput;

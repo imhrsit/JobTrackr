@@ -1,52 +1,28 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-    Plus,
-    Search,
-    Filter,
-    X,
-    LayoutGrid,
-    List,
-    Table2,
-} from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Plus, LayoutGrid, List, Table2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
 import { NoApplicationsYet, NoResults } from "@/components/ui/empty-state";
-import { STATUS_CONFIG } from "@/components/applications/KanbanColumn";
 import { KanbanBoard } from "@/components/applications/KanbanBoard";
+import { SearchAndFilters } from "@/components/applications/SearchAndFilters";
 import { JobDialog } from "@/components/jobs/JobDialog";
+import { useApplicationSearch } from "@/hooks/useApplicationSearch";
+import { paramsToFilters } from "@/lib/url-sync";
 import type {
     ApplicationCard as ApplicationCardData,
-    ApplicationsResponse,
     BoardData,
 } from "@/types/application";
-import { STATUS_COLUMNS } from "@/types/application";
+import { DEFAULT_FILTERS } from "@/types/application";
 import type { ApplicationStatus } from "@prisma/client";
 
 // ============================================================================
 // Helpers
 // ============================================================================
-
-function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-    useEffect(() => {
-        const timer = setTimeout(() => setDebouncedValue(value), delay);
-        return () => clearTimeout(timer);
-    }, [value, delay]);
-    return debouncedValue;
-}
 
 function groupByStatus(applications: ApplicationCardData[]): BoardData {
     const board: BoardData = {
@@ -72,83 +48,63 @@ export default function ApplicationsBoard() {
     const searchParams = useSearchParams();
     const queryClient = useQueryClient();
 
-    // State
-    const [search, setSearch] = useState(searchParams.get("search") || "");
-    const debouncedSearch = useDebounce(search, 500);
-    const [statusFilter, setStatusFilter] = useState<ApplicationStatus[]>(() => {
-        const s = searchParams.get("status");
-        return s ? (s.split(",") as ApplicationStatus[]) : [];
-    });
+    // Initialise from URL params so browser back/forward works
+    const { filters: initialFilters, search: initialSearch } = useMemo(
+        () => paramsToFilters(searchParams as unknown as URLSearchParams),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []
+    );
+
+    const {
+        searchQuery,
+        setSearchQuery,
+        filters,
+        setFilters,
+        applications,
+        total: totalApps,
+        isLoading,
+        isError,
+        queryKey,
+    } = useApplicationSearch({ initialSearch, initialFilters });
+
     const [jobDialogOpen, setJobDialogOpen] = useState(false);
 
-    // Sync filters to URL
-    useEffect(() => {
-        const params = new URLSearchParams();
-        if (debouncedSearch) params.set("search", debouncedSearch);
-        if (statusFilter.length > 0) params.set("status", statusFilter.join(","));
-        const qs = params.toString();
-        router.replace(`/applications${qs ? `?${qs}` : ""}`, {
-            scroll: false,
-        });
-    }, [debouncedSearch, statusFilter, router]);
-
-    // Keyboard shortcut: ESC to clear filters
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && (search || statusFilter.length > 0)) {
-                setSearch("");
-                setStatusFilter([]);
-            }
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [search, statusFilter]);
-
-    // Query key — shared with KanbanBoard for optimistic updates
-    const applicationsQueryKey = useMemo(
-        () => ["applications", debouncedSearch, statusFilter.join(",")],
-        [debouncedSearch, statusFilter]
-    );
-
-    // Fetch applications
-    const { data, isLoading, isError } = useQuery<ApplicationsResponse>({
-        queryKey: applicationsQueryKey,
-        queryFn: async () => {
-            const params = new URLSearchParams();
-            if (debouncedSearch) params.set("search", debouncedSearch);
-            if (statusFilter.length > 0)
-                params.set("status", statusFilter.join(","));
-            const res = await fetch(`/api/applications?${params.toString()}`);
-            if (!res.ok) throw new Error("Failed to fetch applications");
-            return res.json() as Promise<ApplicationsResponse>;
-        },
-    });
-
     // Board data (grouped by status)
-    const board = useMemo(
-        () => groupByStatus(data?.applications ?? []),
-        [data?.applications]
-    );
+    const board = useMemo(() => groupByStatus(applications), [applications]);
 
-    // Filter helpers
-    const hasFilters = search !== "" || statusFilter.length > 0;
-    const toggleStatusFilter = (s: ApplicationStatus) => {
-        setStatusFilter((prev) =>
-            prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-        );
-    };
-    const clearFilters = () => {
-        setSearch("");
-        setStatusFilter([]);
-    };
+    // Per-status counts for the filter UI checkboxes
+    const applicationCounts = useMemo(() => {
+        const counts: Record<ApplicationStatus, number> = {
+            SAVED: 0,
+            APPLIED: 0,
+            REFERRED: 0,
+            INTERVIEWING: 0,
+            OFFERED: 0,
+            REJECTED: 0,
+        };
+        applications.forEach((app) => {
+            counts[app.status] = (counts[app.status] ?? 0) + 1;
+        });
+        return counts;
+    }, [applications]);
 
-    const totalApps = data?.total ?? 0;
-    const isFiltered = hasFilters;
-    const isEmpty = !isLoading && totalApps === 0 && !isFiltered;
-    const isFilteredEmpty = !isLoading && totalApps === 0 && isFiltered;
+    // Whether any real filter (not just sort) is active
+    const hasSearchOrFilter =
+        searchQuery !== "" ||
+        (filters.status?.length ?? 0) > 0 ||
+        filters.workMode != null ||
+        filters.salaryMin != null ||
+        filters.salaryMax != null ||
+        !!filters.location ||
+        (filters.companies?.length ?? 0) > 0 ||
+        filters.dateFrom != null ||
+        filters.dateTo != null ||
+        filters.hasReferral === true ||
+        filters.hasInterview === true;
 
-    // Visible statuses (when filtering)
-    const visibleStatuses = statusFilter.length > 0 ? statusFilter : undefined;
+    const isEmpty = !isLoading && totalApps === 0 && !hasSearchOrFilter;
+    const isFilteredEmpty = !isLoading && totalApps === 0 && hasSearchOrFilter;
+    const visibleStatuses = filters.status?.length ? filters.status : undefined;
 
     return (
         <div className="space-y-4 animate-in fade-in duration-300">
@@ -171,65 +127,18 @@ export default function ApplicationsBoard() {
             </div>
 
             {/* ======== Search + Filters ======== */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by title or company..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9"
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <div className="flex-1">
+                    <SearchAndFilters
+                        onSearch={setSearchQuery}
+                        onFilter={setFilters}
+                        activeFilters={filters}
+                        applicationCounts={applicationCounts}
                     />
-                    {search && (
-                        <button
-                            onClick={() => setSearch("")}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                            <X className="h-3.5 w-3.5" />
-                        </button>
-                    )}
                 </div>
 
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="gap-2">
-                            <Filter className="h-3.5 w-3.5" />
-                            Filters
-                            {statusFilter.length > 0 && (
-                                <Badge
-                                    variant="secondary"
-                                    className="ml-1 h-5 px-1.5 text-xs"
-                                >
-                                    {statusFilter.length}
-                                </Badge>
-                            )}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-56" align="start">
-                        <div className="space-y-3">
-                            <p className="text-sm font-medium">Filter by Status</p>
-                            {STATUS_COLUMNS.map((col) => (
-                                <label
-                                    key={col.status}
-                                    className="flex items-center gap-2 text-sm cursor-pointer"
-                                >
-                                    <Checkbox
-                                        checked={statusFilter.includes(col.status)}
-                                        onCheckedChange={() => toggleStatusFilter(col.status)}
-                                    />
-                                    <span
-                                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${col.bgColor} ${col.color}`}
-                                    >
-                                        {col.label}
-                                    </span>
-                                </label>
-                            ))}
-                        </div>
-                    </PopoverContent>
-                </Popover>
-
                 {/* View toggle placeholder */}
-                <div className="hidden sm:flex items-center border rounded-lg">
+                <div className="hidden sm:flex items-center border rounded-lg shrink-0">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -254,42 +163,6 @@ export default function ApplicationsBoard() {
                 </div>
             </div>
 
-            {/* ======== Active Filters ======== */}
-            {hasFilters && (
-                <div className="flex items-center gap-2 flex-wrap">
-                    {statusFilter.map((s) => {
-                        const config = STATUS_CONFIG[s];
-                        return (
-                            <Badge
-                                key={s}
-                                variant="secondary"
-                                className="gap-1 cursor-pointer"
-                                onClick={() => toggleStatusFilter(s)}
-                            >
-                                {config.label}
-                                <X className="h-3 w-3" />
-                            </Badge>
-                        );
-                    })}
-                    {search && (
-                        <Badge
-                            variant="secondary"
-                            className="gap-1 cursor-pointer"
-                            onClick={() => setSearch("")}
-                        >
-                            Search: &quot;{search}&quot;
-                            <X className="h-3 w-3" />
-                        </Badge>
-                    )}
-                    <button
-                        onClick={clearFilters}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        Clear all
-                    </button>
-                </div>
-            )}
-
             {/* ======== Loading ======== */}
             {isLoading && <BoardSkeleton />}
 
@@ -299,7 +172,14 @@ export default function ApplicationsBoard() {
                     onAction={() => router.push("/jobs/new")}
                 />
             )}
-            {isFilteredEmpty && <NoResults onAction={clearFilters} />}
+            {isFilteredEmpty && (
+                <NoResults
+                    onAction={() => {
+                        setSearchQuery("");
+                        setFilters(DEFAULT_FILTERS);
+                    }}
+                />
+            )}
 
             {/* ======== Error ======== */}
             {isError && (
@@ -320,9 +200,9 @@ export default function ApplicationsBoard() {
             {!isLoading && !isError && totalApps > 0 && (
                 <KanbanBoard
                     board={board}
-                    applications={data?.applications ?? []}
+                    applications={applications}
                     visibleStatuses={visibleStatuses}
-                    queryKey={applicationsQueryKey}
+                    queryKey={queryKey}
                 />
             )}
 

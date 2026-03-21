@@ -115,3 +115,31 @@ export const STATUS_COLUMNS: StatusColumnConfig[] = [
 ];
 
 export type BoardData = Record<ApplicationStatus, ApplicationCard[]>;
+
+// ============================================================================
+// Filter Types
+// ============================================================================
+
+export type SortBy = "createdAt" | "appliedDate" | "company" | "title";
+export type SortOrder = "asc" | "desc";
+
+export interface ApplicationFilters {
+    search?: string;
+    status?: ApplicationStatus[];
+    workMode?: WorkMode | null;
+    salaryMin?: number | null;
+    salaryMax?: number | null;
+    location?: string;
+    companies?: string[];
+    dateFrom?: string | null;
+    dateTo?: string | null;
+    sortBy?: SortBy;
+    sortOrder?: SortOrder;
+    hasReferral?: boolean;
+    hasInterview?: boolean;
+}
+
+export const DEFAULT_FILTERS: ApplicationFilters = {
+    sortBy: "createdAt",
+    sortOrder: "desc",
+};
