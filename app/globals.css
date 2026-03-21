@@ -211,6 +211,39 @@
   .transition-fast {
     @apply transition-all duration-150 ease-in-out;
   }
+
+  /* Shimmer loading effect — use instead of animate-pulse for richer skeletons */
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+    background-image: linear-gradient(
+      to right,
+      oklch(0.97 0 0) 0%,
+      oklch(0.92 0 0) 20%,
+      oklch(0.97 0 0) 40%,
+      oklch(0.97 0 0) 100%
+    );
+    background-size: 1000px 100%;
+    background-repeat: no-repeat;
+  }
+
+  .dark .animate-shimmer {
+    background-image: linear-gradient(
+      to right,
+      oklch(0.269 0 0) 0%,
+      oklch(0.32 0 0) 20%,
+      oklch(0.269 0 0) 40%,
+      oklch(0.269 0 0) 100%
+    );
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
 }
 
 @theme inline {

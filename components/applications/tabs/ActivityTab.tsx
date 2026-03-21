@@ -8,7 +8,7 @@ import {
     isToday,
     isYesterday,
 } from "date-fns";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import {
     Plus,
     ArrowRight,

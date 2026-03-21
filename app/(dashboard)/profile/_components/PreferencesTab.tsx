@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Loader2, Sun, Moon, Monitor, LayoutGrid, List, Table2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";

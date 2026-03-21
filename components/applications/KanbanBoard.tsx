@@ -18,7 +18,7 @@ import {
     type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import {
     KanbanColumn,
     KanbanSortableItem,

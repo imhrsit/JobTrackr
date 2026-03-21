@@ -23,7 +23,7 @@ import {
     FileText
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { ReferralStatus } from "@prisma/client";
 
 import { Button } from "@/components/ui/button";
