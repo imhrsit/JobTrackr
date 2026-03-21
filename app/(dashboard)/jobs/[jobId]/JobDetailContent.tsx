@@ -26,6 +26,7 @@ import {
     CalendarPlus,
     StickyNote,
     RefreshCw,
+    Paperclip,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,10 @@ import type {
     InterviewType,
 } from "@prisma/client";
 import { ReferralsTab } from "@/components/applications/tabs/ReferralsTab";
+import { DocumentsTab } from "@/components/applications/tabs/DocumentsTab";
+import { SkillsTab } from "@/components/applications/tabs/SkillsTab";
+import { InterviewsTab } from "@/components/applications/tabs/InterviewsTab";
+import { ActivityTab } from "@/components/applications/tabs/ActivityTab";
 
 // ============================================================================
 // Types
@@ -612,6 +617,10 @@ export default function JobDetailContent({
                             </Badge>
                         )}
                     </TabsTrigger>
+                    <TabsTrigger value="documents" className="flex-1 gap-1.5">
+                        <Paperclip className="h-4 w-4 hidden sm:block" />
+                        Documents
+                    </TabsTrigger>
                     <TabsTrigger value="skills" className="flex-1 gap-1.5">
                         <GraduationCap className="h-4 w-4 hidden sm:block" />
                         Skills
@@ -848,329 +857,53 @@ export default function JobDetailContent({
                 </TabsContent>
 
                 {/* ============================================================
+                    DOCUMENTS TAB
+                ============================================================ */}
+                <TabsContent value="documents" className="mt-4">
+                    <DocumentsTab
+                        applicationId={application.id}
+                        application={{
+                            id: application.id,
+                            resumeVersion: application.resumeVersion,
+                            coverLetter: application.coverLetter,
+                            notes: application.notes,
+                            job: {
+                                title: job.title,
+                                company: job.company,
+                                jobUrl: job.jobUrl,
+                            },
+                        }}
+                    />
+                </TabsContent>
+
+                {/* ============================================================
                     SKILLS TAB
                 ============================================================ */}
                 <TabsContent value="skills" className="mt-4">
-                    {job.jobSkills.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="p-4 rounded-full bg-muted mb-4">
-                                <GraduationCap className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                            <h3 className="font-semibold mb-1">
-                                No skills listed
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                                Skills for this job will appear here when added.
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {/* Required Skills */}
-                            {job.jobSkills.filter((s) => s.isRequired).length >
-                                0 && (
-                                    <Card>
-                                        <CardHeader className="pb-3">
-                                            <CardTitle className="text-base">
-                                                Required Skills
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="pt-0">
-                                            <div className="flex flex-wrap gap-2">
-                                                {job.jobSkills
-                                                    .filter((s) => s.isRequired)
-                                                    .map((s) => (
-                                                        <Badge
-                                                            key={s.skillId}
-                                                            variant="default"
-                                                        >
-                                                            {s.skill.name}
-                                                        </Badge>
-                                                    ))}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                )}
-
-                            {/* Optional Skills */}
-                            {job.jobSkills.filter((s) => !s.isRequired).length >
-                                0 && (
-                                    <Card>
-                                        <CardHeader className="pb-3">
-                                            <CardTitle className="text-base">
-                                                Nice to Have
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="pt-0">
-                                            <div className="flex flex-wrap gap-2">
-                                                {job.jobSkills
-                                                    .filter((s) => !s.isRequired)
-                                                    .map((s) => (
-                                                        <Badge
-                                                            key={s.skillId}
-                                                            variant="secondary"
-                                                        >
-                                                            {s.skill.name}
-                                                        </Badge>
-                                                    ))}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                )}
-                        </div>
-                    )}
+                    <SkillsTab
+                        applicationId={application.id}
+                        jobSkills={job.jobSkills}
+                    />
                 </TabsContent>
 
                 {/* ============================================================
                     INTERVIEWS TAB
                 ============================================================ */}
                 <TabsContent value="interviews" className="mt-4">
-                    {application.interviews.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="p-4 rounded-full bg-muted mb-4">
-                                <Calendar className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                            <h3 className="font-semibold mb-1">
-                                No interviews scheduled
-                            </h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Your upcoming interviews will appear here
-                            </p>
-                            <Button
-                                size="sm"
-                                onClick={() =>
-                                    toast.info(
-                                        "Schedule interview coming soon"
-                                    )
-                                }
-                            >
-                                <Plus className="h-4 w-4 mr-1.5" />
-                                Schedule Interview
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {application.interviews.map((iv) => {
-                                const isPast =
-                                    new Date(iv.interviewDate) < new Date();
-                                return (
-                                    <Card
-                                        key={iv.id}
-                                        className={
-                                            iv.completed
-                                                ? "opacity-75"
-                                                : ""
-                                        }
-                                    >
-                                        <CardContent className="p-4">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <p className="font-medium">
-                                                        {INTERVIEW_TYPE_LABELS[
-                                                            iv.interviewType
-                                                        ] ??
-                                                            iv.interviewType}
-                                                    </p>
-                                                    {iv.interviewerName && (
-                                                        <p className="text-sm text-muted-foreground">
-                                                            With{" "}
-                                                            {
-                                                                iv.interviewerName
-                                                            }
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="text-sm font-medium">
-                                                        {format(
-                                                            new Date(
-                                                                iv.interviewDate
-                                                            ),
-                                                            "MMM d, yyyy"
-                                                        )}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {format(
-                                                            new Date(
-                                                                iv.interviewDate
-                                                            ),
-                                                            "h:mm a"
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            {iv.location && (
-                                                <div className="flex items-center gap-1.5 mt-2 text-sm text-muted-foreground">
-                                                    <MapPin className="h-3.5 w-3.5" />
-                                                    {iv.location.startsWith(
-                                                        "http"
-                                                    ) ? (
-                                                        <a
-                                                            href={iv.location}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-primary hover:underline"
-                                                        >
-                                                            Join Meeting
-                                                        </a>
-                                                    ) : (
-                                                        <span>
-                                                            {iv.location}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
-                                            {iv.notes && (
-                                                <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">
-                                                    {iv.notes}
-                                                </p>
-                                            )}
-                                            {iv.outcome && (
-                                                <div className="mt-2">
-                                                    <Badge variant="outline">
-                                                        Outcome: {iv.outcome}
-                                                    </Badge>
-                                                </div>
-                                            )}
-                                            <div className="mt-2 flex items-center gap-2">
-                                                {iv.completed ? (
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="text-xs"
-                                                    >
-                                                        Completed
-                                                    </Badge>
-                                                ) : isPast ? (
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="text-xs text-amber-600"
-                                                    >
-                                                        Pending Review
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="text-xs text-blue-600"
-                                                    >
-                                                        Upcoming
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
-                        </div>
-                    )}
+                    <InterviewsTab
+                        applicationId={application.id}
+                        initialInterviews={application.interviews}
+                    />
                 </TabsContent>
 
                 {/* ============================================================
                     ACTIVITY TAB
                 ============================================================ */}
                 <TabsContent value="activity" className="mt-4">
-                    {application.activities.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="p-4 rounded-full bg-muted mb-4">
-                                <Activity className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                            <h3 className="font-semibold mb-1">
-                                No activity yet
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                                Activity will be logged automatically as you
-                                make changes.
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="relative">
-                            {/* Timeline line */}
-                            <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
-
-                            <div className="space-y-0">
-                                {application.activities.map(
-                                    (act, idx) => {
-                                        const isFirst = idx === 0;
-                                        let dateLabel = "";
-                                        if (idx === 0) {
-                                            dateLabel = format(
-                                                new Date(act.createdAt),
-                                                "MMMM d, yyyy"
-                                            );
-                                        } else {
-                                            const prevDate = format(
-                                                new Date(
-                                                    application.activities[
-                                                        idx - 1
-                                                    ].createdAt
-                                                ),
-                                                "yyyy-MM-dd"
-                                            );
-                                            const curDate = format(
-                                                new Date(act.createdAt),
-                                                "yyyy-MM-dd"
-                                            );
-                                            if (curDate !== prevDate) {
-                                                dateLabel = format(
-                                                    new Date(act.createdAt),
-                                                    "MMMM d, yyyy"
-                                                );
-                                            }
-                                        }
-
-                                        return (
-                                            <div key={act.id}>
-                                                {dateLabel && (
-                                                    <div className="relative flex items-center py-3 pl-10">
-                                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                                            {dateLabel}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                                <div className="relative flex items-start gap-4 py-3 pl-0">
-                                                    {/* Dot */}
-                                                    <div className="relative z-10 flex items-center justify-center w-9 h-9 shrink-0">
-                                                        <div
-                                                            className={`w-2.5 h-2.5 rounded-full ${act.activityType ===
-                                                                "status_changed"
-                                                                ? "bg-primary"
-                                                                : act.activityType ===
-                                                                    "job_created"
-                                                                    ? "bg-green-500"
-                                                                    : "bg-muted-foreground/50"
-                                                                }`}
-                                                        />
-                                                    </div>
-
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm">
-                                                            {act.description}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground mt-0.5">
-                                                            {format(
-                                                                new Date(
-                                                                    act.createdAt
-                                                                ),
-                                                                "h:mm a"
-                                                            )}
-                                                            {" · "}
-                                                            {formatDistanceToNow(
-                                                                new Date(
-                                                                    act.createdAt
-                                                                ),
-                                                                {
-                                                                    addSuffix:
-                                                                        true,
-                                                                }
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    <ActivityTab
+                        applicationId={application.id}
+                        activities={application.activities}
+                    />
                 </TabsContent>
             </Tabs>
 
