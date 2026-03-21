@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
             include: { skill: true },
         });
 
-        return NextResponse.json({ userSkill: updated });
+        return NextResponse.json({ success: true, userSkill: updated });
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(

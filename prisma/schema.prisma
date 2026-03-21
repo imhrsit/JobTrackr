@@ -63,7 +63,15 @@ model User {
   name          String?
   password      String // hashed with bcrypt
   emailVerified DateTime?
-  image         String?
+  image         String?   @db.Text // URL or base64 data-URL
+  // Extended profile
+  phone         String?
+  location      String?
+  bio           String?   @db.Text
+  linkedinUrl   String?
+  githubUrl     String?
+  portfolioUrl  String?
+  preferences   Json? // { notifications: {...}, display: {...} }
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
