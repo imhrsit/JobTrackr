@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 import type { UserProfile, UserPreferences } from "../ProfileContent";
 import { DEFAULT_PREFERENCES } from "../ProfileContent";
 
@@ -76,12 +77,30 @@ interface Props {
     onUpdate: () => void;
 }
 
-export function PreferencesTab({ user }: Props) {
+export function PreferencesTab({ user, onUpdate }: Props) {
     const { theme, setTheme } = useTheme();
 
     const currentPrefs = mergePreferences(user.preferences, {});
     const [notifications] = useState(currentPrefs.notifications);
-    const [display] = useState(currentPrefs.display);
+    const [display, setDisplay] = useState(currentPrefs.display);
+
+    const handleDefaultViewChange = async (newView: "kanban" | "list" | "table") => {
+        const prev = display;
+        const newDisplay = { ...display, defaultView: newView };
+        setDisplay(newDisplay);
+        try {
+            const res = await fetch("/api/users/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ preferences: { display: newDisplay } }),
+            });
+            if (!res.ok) throw new Error("Failed");
+            onUpdate();
+        } catch {
+            setDisplay(prev);
+            toast.error("Failed to save preference.");
+        }
+    };
 
     const NOTIFICATION_ITEMS: { key: keyof typeof notifications; label: string; description: string }[] = [
         { key: "statusChanges", label: "Application status changes", description: "When an application's status is updated" },
@@ -122,18 +141,14 @@ export function PreferencesTab({ user }: Props) {
 
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div>
-                            <p className="text-sm font-medium flex items-center gap-2">
-                                Default View
-                                <ComingSoonBadge />
-                            </p>
+                            <p className="text-sm font-medium">Default View</p>
                             <p className="text-xs text-muted-foreground">
                                 How applications are displayed on the board
                             </p>
                         </div>
                         <ToggleGroup
                             value={display.defaultView}
-                            onChange={() => {}}
-                            disabled
+                            onChange={handleDefaultViewChange}
                             options={[
                                 { value: "kanban", label: "Kanban", icon: <LayoutGrid className="h-3.5 w-3.5" /> },
                                 { value: "list", label: "List", icon: <List className="h-3.5 w-3.5" /> },

@@ -260,7 +260,7 @@ const editSchema = z.object({
     location: z.string().max(200).optional().or(z.literal("")),
     workMode: z.enum(["REMOTE", "HYBRID", "ONSITE"]),
     jobUrl: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
-    salaryCurrency: z.string().default("USD"),
+    salaryCurrency: z.string(),
     salaryMin: z.coerce.number().int().positive().nullable().optional(),
     salaryMax: z.coerce.number().int().positive().nullable().optional(),
     description: z.string().optional().or(z.literal("")),
@@ -289,8 +289,9 @@ function EditApplicationDialog({
     const { job } = application;
     const [saving, setSaving] = useState(false);
 
-    const form = useForm<EditFormValues>({
-        resolver: zodResolver(editSchema),
+    const form = useForm<EditFormValues, unknown, EditFormValues>({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(editSchema) as any,
         defaultValues: {
             title: job.title,
             company: job.company,

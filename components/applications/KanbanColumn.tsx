@@ -126,7 +126,7 @@ export const KanbanColumn = React.memo(function KanbanColumn({
             role="list"
             aria-label={`${config.label} column, ${displayCount} application${displayCount !== 1 ? "s" : ""}`}
             className={`
-        flex flex-col min-w-[280px] w-[280px] shrink-0 rounded-xl border transition-all duration-200
+        flex flex-col w-full min-w-0 rounded-xl border transition-all duration-200
         ${isOver ? "ring-2 ring-primary/40 bg-primary/5 border-primary/30" : "bg-muted/30"}
       `}
         >

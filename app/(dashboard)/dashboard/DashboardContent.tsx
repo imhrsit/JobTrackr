@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { toast } from "@/lib/toast";
 import {
     Briefcase,
     Activity,
@@ -136,11 +137,12 @@ export default function DashboardContent({ userName }: DashboardContentProps) {
                             Add New Job
                         </Link>
                     </Button>
-                    <Button variant="outline" asChild>
-                        <Link href="/jobs/import">
-                            <LinkIcon className="mr-2 h-4 w-4" />
-                            Import from URL
-                        </Link>
+                    <Button
+                        variant="outline"
+                        onClick={() => toast.info("Chrome extension work is in progress...")}
+                    >
+                        <LinkIcon className="mr-2 h-4 w-4" />
+                        Import from URL
                     </Button>
                 </div>
             </div>

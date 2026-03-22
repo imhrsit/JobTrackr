@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, LayoutGrid, List, Table2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { NoApplicationsYet, NoResults } from "@/components/ui/empty-state";
 import { KanbanBoard } from "@/components/applications/KanbanBoard";
+import { ListView } from "@/components/applications/ListView";
+import { TableView } from "@/components/applications/TableView";
 import { SearchAndFilters } from "@/components/applications/SearchAndFilters";
 import { JobDialog } from "@/components/jobs/JobDialog";
 import { useApplicationSearch } from "@/hooks/useApplicationSearch";
@@ -19,6 +21,12 @@ import type {
 } from "@/types/application";
 import { DEFAULT_FILTERS } from "@/types/application";
 import type { ApplicationStatus } from "@prisma/client";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+type ViewMode = "kanban" | "list" | "table";
 
 // ============================================================================
 // Helpers
@@ -48,6 +56,28 @@ export default function ApplicationsBoard() {
     const searchParams = useSearchParams();
     const queryClient = useQueryClient();
 
+    const [viewMode, setViewMode] = useState<ViewMode>("kanban");
+    const viewModeInitialized = useRef(false);
+
+    // Load default view from user preferences (once, on first data arrival)
+    const { data: profileData } = useQuery({
+        queryKey: ["profile"],
+        queryFn: async () => {
+            const res = await fetch("/api/users/profile");
+            if (!res.ok) throw new Error("Failed");
+            return res.json() as Promise<{ user: { preferences: { display?: { defaultView?: ViewMode } } | null } }>;
+        },
+        staleTime: 60_000,
+    });
+
+    useEffect(() => {
+        if (!viewModeInitialized.current && profileData) {
+            const pref = profileData.user?.preferences?.display?.defaultView;
+            if (pref) setViewMode(pref);
+            viewModeInitialized.current = true;
+        }
+    }, [profileData]);
+
     // Initialise from URL params so browser back/forward works
     const { filters: initialFilters, search: initialSearch } = useMemo(
         () => paramsToFilters(searchParams as unknown as URLSearchParams),
@@ -69,7 +99,7 @@ export default function ApplicationsBoard() {
 
     const [jobDialogOpen, setJobDialogOpen] = useState(false);
 
-    // Board data (grouped by status)
+    // Board data (grouped by status) — only needed for kanban view
     const board = useMemo(() => groupByStatus(applications), [applications]);
 
     // Per-status counts for the filter UI checkboxes
@@ -106,6 +136,8 @@ export default function ApplicationsBoard() {
     const isFilteredEmpty = !isLoading && totalApps === 0 && hasSearchOrFilter;
     const visibleStatuses = filters.status?.length ? filters.status : undefined;
 
+    const handleEdit = (id: string) => router.push(`/jobs/${id}`);
+
     return (
         <div className="space-y-4 animate-in fade-in duration-300">
             {/* ======== Header ======== */}
@@ -126,7 +158,7 @@ export default function ApplicationsBoard() {
                 </Button>
             </div>
 
-            {/* ======== Search + Filters ======== */}
+            {/* ======== Search + Filters + View Toggle ======== */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                 <div className="flex-1">
                     <SearchAndFilters
@@ -136,27 +168,34 @@ export default function ApplicationsBoard() {
                         applicationCounts={applicationCounts}
                     />
                 </div>
-
-                {/* View toggle placeholder */}
                 <div className="hidden sm:flex items-center border rounded-lg shrink-0">
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-none rounded-l-lg bg-muted"
+                        className={`h-8 w-8 rounded-none rounded-l-lg ${viewMode === "kanban" ? "bg-muted" : ""}`}
+                        onClick={() => setViewMode("kanban")}
+                        aria-label="Kanban view"
+                        aria-pressed={viewMode === "kanban"}
                     >
                         <LayoutGrid className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-none"
+                        className={`h-8 w-8 rounded-none ${viewMode === "list" ? "bg-muted" : ""}`}
+                        onClick={() => setViewMode("list")}
+                        aria-label="List view"
+                        aria-pressed={viewMode === "list"}
                     >
                         <List className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-none rounded-r-lg"
+                        className={`h-8 w-8 rounded-none rounded-r-lg ${viewMode === "table" ? "bg-muted" : ""}`}
+                        onClick={() => setViewMode("table")}
+                        aria-label="Table view"
+                        aria-pressed={viewMode === "table"}
                     >
                         <Table2 className="h-3.5 w-3.5" />
                     </Button>
@@ -168,9 +207,7 @@ export default function ApplicationsBoard() {
 
             {/* ======== Empty States ======== */}
             {isEmpty && (
-                <NoApplicationsYet
-                    onAction={() => router.push("/jobs/new")}
-                />
+                <NoApplicationsYet onAction={() => router.push("/jobs/new")} />
             )}
             {isFilteredEmpty && (
                 <NoResults
@@ -196,14 +233,32 @@ export default function ApplicationsBoard() {
                 </div>
             )}
 
-            {/* ======== Kanban Board ======== */}
+            {/* ======== Views ======== */}
             {!isLoading && !isError && totalApps > 0 && (
-                <KanbanBoard
-                    board={board}
-                    applications={applications}
-                    visibleStatuses={visibleStatuses}
-                    queryKey={queryKey}
-                />
+                <>
+                    {viewMode === "kanban" && (
+                        <KanbanBoard
+                            board={board}
+                            applications={applications}
+                            visibleStatuses={visibleStatuses}
+                            queryKey={queryKey}
+                        />
+                    )}
+                    {viewMode === "list" && (
+                        <ListView
+                            applications={applications}
+                            queryKey={queryKey}
+                            onEdit={handleEdit}
+                        />
+                    )}
+                    {viewMode === "table" && (
+                        <TableView
+                            applications={applications}
+                            queryKey={queryKey}
+                            onEdit={handleEdit}
+                        />
+                    )}
+                </>
             )}
 
             {/* ======== Job Dialog ======== */}
@@ -221,12 +276,9 @@ export default function ApplicationsBoard() {
 
 export function BoardSkeleton() {
     return (
-        <div className="flex gap-4 overflow-hidden pb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
             {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                    key={i}
-                    className="min-w-[280px] w-[280px] shrink-0 rounded-xl border bg-muted/30"
-                >
+                <div key={i} className="w-full rounded-xl border bg-muted/30">
                     <div className="flex items-center justify-between p-3 border-b">
                         <Skeleton className="h-5 w-20 rounded-md" />
                         <Skeleton className="h-5 w-6 rounded-md" />

@@ -266,7 +266,7 @@ export const KanbanBoard = React.memo(function KanbanBoard({
             accessibility={{ announcements }}
         >
             <div
-                className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4"
                 role="region"
                 aria-label="Application Kanban board"
             >

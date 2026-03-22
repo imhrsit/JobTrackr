@@ -2,16 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search, Bell } from "lucide-react";
+import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { UserDropdown } from "./UserDropdown";
 
 interface HeaderProps {
   onMenuClick?: () => void;
   sidebarOpen?: boolean;
-  notificationCount?: number;
 }
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -43,7 +41,7 @@ function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
   return crumbs;
 }
 
-export function Header({ onMenuClick, sidebarOpen = false, notificationCount = 0 }: HeaderProps) {
+export function Header({ onMenuClick, sidebarOpen = false }: HeaderProps) {
   const pathname = usePathname();
   const breadcrumbs = getBreadcrumbs(pathname);
 
@@ -85,32 +83,6 @@ export function Header({ onMenuClick, sidebarOpen = false, notificationCount = 0
       </nav>
 
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="icon" aria-label="Search (coming soon)" disabled>
-          <Search className="h-4 w-4" aria-hidden="true" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-          aria-label={
-            notificationCount > 0
-              ? `Notifications — ${notificationCount} unread`
-              : "Notifications — no new notifications"
-          }
-        >
-          <Bell className="h-4 w-4" aria-hidden="true" />
-          {notificationCount > 0 && (
-            <Badge
-              variant="destructive"
-              aria-hidden="true"
-              className="absolute -right-1 -top-1 h-4 min-w-4 rounded-full p-0 text-[10px]"
-            >
-              {notificationCount > 99 ? "99+" : notificationCount}
-            </Badge>
-          )}
-        </Button>
-
         <UserDropdown />
       </div>
     </header>

@@ -74,7 +74,6 @@ export function DashboardLayout({ children, applicationCount = 0 }: DashboardLay
         <Header
           onMenuClick={() => setSidebarOpen((o) => !o)}
           sidebarOpen={sidebarOpen}
-          notificationCount={0}
         />
         <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
           {children}
