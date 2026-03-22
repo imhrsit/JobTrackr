@@ -79,7 +79,7 @@ export default function LoginPage() {
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold">Organize your job search</h2>
             <p className="text-muted-foreground">
-              Keep track of every application, interview, and opportunity in one place.
+              Keep track of every application, interview and opportunity in one place.
             </p>
           </div>
         </div>

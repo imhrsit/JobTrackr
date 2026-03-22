@@ -80,8 +80,7 @@ interface JobSkill {
 }
 
 interface UserSkill {
-    userId: string;
-    skillId: string;
+    id: string;
     proficiencyLevel: ProficiencyLevel;
     skill: Skill;
 }
@@ -152,7 +151,7 @@ export function SkillsTab({ applicationId, jobSkills }: SkillsTabProps) {
 
     // ---- Fetch user skills ----
     const { data: userSkillsData, isLoading } = useQuery<{
-        userSkills: UserSkill[];
+        skills: UserSkill[];
     }>({
         queryKey: ["user-skills"],
         queryFn: async () => {
@@ -162,7 +161,7 @@ export function SkillsTab({ applicationId, jobSkills }: SkillsTabProps) {
         },
     });
 
-    const userSkills = userSkillsData?.userSkills ?? [];
+    const userSkills = userSkillsData?.skills ?? [];
 
     // ---- Match calculation ----
     const matchData = useMemo(() => {
@@ -175,7 +174,7 @@ export function SkillsTab({ applicationId, jobSkills }: SkillsTabProps) {
                 requiredTotal: 0,
             };
 
-        const userSkillIds = new Set(userSkills.map((us) => us.skillId));
+        const userSkillIds = new Set(userSkills.map((us) => us.id));
         const matched = jobSkills.filter((js) => userSkillIds.has(js.skillId));
         const missing = jobSkills.filter((js) => !userSkillIds.has(js.skillId));
         const requiredTotal = jobSkills.filter((js) => js.isRequired).length;
@@ -189,7 +188,7 @@ export function SkillsTab({ applicationId, jobSkills }: SkillsTabProps) {
 
     // ---- Filtered lists ----
     const filteredJobSkills = useMemo(() => {
-        const userSkillIds = new Set(userSkills.map((us) => us.skillId));
+        const userSkillIds = new Set(userSkills.map((us) => us.id));
         let filtered = jobSkills;
 
         if (jobFilter === "matched") {
@@ -212,9 +211,9 @@ export function SkillsTab({ applicationId, jobSkills }: SkillsTabProps) {
         let filtered = userSkills;
 
         if (userFilter === "matched") {
-            filtered = filtered.filter((us) => jobSkillIds.has(us.skillId));
+            filtered = filtered.filter((us) => jobSkillIds.has(us.id));
         } else if (userFilter === "missing") {
-            filtered = filtered.filter((us) => !jobSkillIds.has(us.skillId));
+            filtered = filtered.filter((us) => !jobSkillIds.has(us.id));
         }
 
         if (search) {
@@ -328,10 +327,10 @@ export function SkillsTab({ applicationId, jobSkills }: SkillsTabProps) {
     };
 
     const getUserProficiency = (skillId: string) =>
-        userSkills.find((us) => us.skillId === skillId);
+        userSkills.find((us) => us.id === skillId);
 
     const jobSkillIds = new Set(jobSkills.map((js) => js.skillId));
-    const userSkillIds = new Set(userSkills.map((us) => us.skillId));
+    const userSkillIds = new Set(userSkills.map((us) => us.id));
 
     // ========================================================================
     // Render
@@ -597,12 +596,12 @@ export function SkillsTab({ applicationId, jobSkills }: SkillsTabProps) {
                             <div className="space-y-2">
                                 {filteredUserSkills.map((us) => {
                                     const isRelevant = jobSkillIds.has(
-                                        us.skillId
+                                        us.id
                                     );
 
                                     return (
                                         <div
-                                            key={us.skillId}
+                                            key={us.id}
                                             className={`flex items-center justify-between p-2.5 rounded-lg border transition-colors ${
                                                 isRelevant
                                                     ? "bg-green-50/50 border-green-200 dark:bg-green-950/20 dark:border-green-900"
@@ -633,7 +632,7 @@ export function SkillsTab({ applicationId, jobSkills }: SkillsTabProps) {
                                                     updateProficiencyMutation.mutate(
                                                         {
                                                             skillId:
-                                                                us.skillId,
+                                                                us.id,
                                                             proficiencyLevel:
                                                                 newLevel,
                                                         }
@@ -731,7 +730,7 @@ export function SkillsTab({ applicationId, jobSkills }: SkillsTabProps) {
                             Your Strengths
                         </CardTitle>
                         <CardDescription>
-                            Highlight these skills in your application — you
+                            Highlight these skills in your application - you
                             already have them!
                         </CardDescription>
                     </CardHeader>

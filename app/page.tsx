@@ -46,7 +46,7 @@ export default async function Home() {
             </h1>
             <p className="text-lg text-muted-foreground md:text-xl">
               Stop losing track of applications. JobTrackr helps you manage every
-              opportunity—from first apply to final offer.
+              opportunity - from first apply to final offer.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="text-base" asChild>
