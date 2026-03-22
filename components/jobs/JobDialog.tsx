@@ -357,6 +357,7 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
 
             queryClient.invalidateQueries({ queryKey: ["applications"] });
             queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+            queryClient.invalidateQueries({ queryKey: ["analytics"] });
             queryClient.invalidateQueries({ queryKey: ["jobs"] });
 
             toast.success(`Added ${values.title} at ${values.company}`);

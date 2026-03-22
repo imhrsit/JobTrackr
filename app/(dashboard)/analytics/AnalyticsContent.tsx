@@ -103,14 +103,14 @@ export default function AnalyticsContent() {
             const params = new URLSearchParams({ groupBy });
             if (dateFrom) params.set("dateFrom", dateFrom);
             if (dateTo) params.set("dateTo", dateTo);
-            const res = await fetch(`/api/analytics?${params}`);
+            const res = await fetch(`/api/analytics?${params}`, { cache: "no-store" });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
                 throw new Error(err.error ?? "Failed to fetch analytics");
             }
             return res.json();
         },
-        staleTime: 5 * 60 * 1000,
+        staleTime: 0,
     });
 
     const handleExportCSV = () => {

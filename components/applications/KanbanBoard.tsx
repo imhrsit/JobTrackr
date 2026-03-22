@@ -190,6 +190,7 @@ export const KanbanBoard = React.memo(function KanbanBoard({
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey });
             queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+            queryClient.invalidateQueries({ queryKey: ["analytics"] });
         },
     });
 
@@ -283,6 +284,7 @@ export const KanbanBoard = React.memo(function KanbanBoard({
                                         application={card}
                                         isDragging={activeCard?.id === card.id}
                                         onClick={() => router.push(`/jobs/${card.id}`)}
+                                        onEdit={() => router.push(`/jobs/${card.id}`)}
                                     />
                                 </KanbanSortableItem>
                             ))}

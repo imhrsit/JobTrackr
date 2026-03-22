@@ -14,15 +14,31 @@ interface HeaderProps {
   notificationCount?: number;
 }
 
+const ROUTE_LABELS: Record<string, string> = {
+  dashboard: "Dashboard",
+  applications: "Applications",
+  analytics: "Analytics",
+  profile: "Profile",
+  new: "New",
+};
+
+const ROUTE_HREF_OVERRIDES: Record<string, string> = {
+  jobs: "/applications",
+};
+
 function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
   const segments = pathname.split("/").filter(Boolean);
-  if (segments.length <= 1) return [{ label: "Dashboard", href: "/dashboard" }];
+  if (segments.length === 0 || pathname === "/dashboard") {
+    return [{ label: "Dashboard", href: "/dashboard" }];
+  }
   const crumbs = [{ label: "Dashboard", href: "/dashboard" }];
   let href = "";
-  for (let i = 1; i < segments.length; i++) {
-    href += `/${segments[i]}`;
-    const label = segments[i].charAt(0).toUpperCase() + segments[i].slice(1);
-    crumbs.push({ label, href: `/dashboard${href}` });
+  for (const segment of segments) {
+    href += `/${segment}`;
+    if (href === "/dashboard") continue;
+    const label = ROUTE_LABELS[segment] ?? (segment in ROUTE_HREF_OVERRIDES ? "Applications" : "Details");
+    const resolvedHref = ROUTE_HREF_OVERRIDES[segment] ?? href;
+    crumbs.push({ label, href: resolvedHref });
   }
   return crumbs;
 }

@@ -448,7 +448,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(data, {
             headers: {
-                "Cache-Control": "private, max-age=3600, stale-while-revalidate=60",
+                "Cache-Control": "no-store",
             },
         });
     } catch (error) {
