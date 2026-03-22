@@ -152,13 +152,19 @@ export const ApplicationCard = React.memo(function ApplicationCard({
                 <CardContent className="p-3 space-y-2">
                     {/* ---- Row 1: Header (logo, title, menu) ---- */}
                     <div className="flex items-start gap-2">
-                        {/* Drag handle — visible on hover */}
-                        <div className="mt-1 text-muted-foreground/0 group-hover:text-muted-foreground/50 transition-colors">
+                        {/* Drag handle — decorative, hidden from screen readers */}
+                        <div
+                            className="mt-1 text-muted-foreground/0 group-hover:text-muted-foreground/50 transition-colors"
+                            aria-hidden="true"
+                        >
                             <GripVertical className="h-4 w-4" />
                         </div>
 
-                        {/* Company logo placeholder */}
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold">
+                        {/* Company logo placeholder — decorative */}
+                        <div
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold"
+                            aria-hidden="true"
+                        >
                             {getInitials(app.job.company)}
                         </div>
 
@@ -183,9 +189,9 @@ export const ApplicationCard = React.memo(function ApplicationCard({
                                         variant="ghost"
                                         size="icon"
                                         className="h-7 w-7"
-                                        aria-label="Application actions"
+                                        aria-label={`Actions for ${app.job.title} at ${app.job.company}`}
                                     >
-                                        <MoreHorizontal className="h-4 w-4" />
+                                        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
@@ -248,7 +254,7 @@ export const ApplicationCard = React.memo(function ApplicationCard({
                                 variant="secondary"
                                 className="text-[10px] px-1.5 py-0 h-5 gap-1 font-normal"
                             >
-                                <MapPin className="h-2.5 w-2.5" />
+                                <MapPin className="h-2.5 w-2.5" aria-hidden="true" />
                                 {app.job.location}
                             </Badge>
                         )}
@@ -265,7 +271,7 @@ export const ApplicationCard = React.memo(function ApplicationCard({
                                 variant="secondary"
                                 className="text-[10px] px-1.5 py-0 h-5 gap-1 font-normal"
                             >
-                                <DollarSign className="h-2.5 w-2.5" />
+                                <DollarSign className="h-2.5 w-2.5" aria-hidden="true" />
                                 {salary}
                             </Badge>
                         )}
@@ -276,7 +282,8 @@ export const ApplicationCard = React.memo(function ApplicationCard({
                         <div className="flex items-center gap-2.5">
                             {appliedAgo && (
                                 <span className="flex items-center gap-1">
-                                    <CalendarIcon className="h-3 w-3" />
+                                    <CalendarIcon className="h-3 w-3" aria-hidden="true" />
+                                    <span className="sr-only">Applied </span>
                                     {appliedAgo}
                                 </span>
                             )}
@@ -286,26 +293,26 @@ export const ApplicationCard = React.memo(function ApplicationCard({
                             {referralCount > 0 && (
                                 <span
                                     className="flex items-center gap-0.5 text-purple-600"
-                                    title={`${referralCount} referral${referralCount > 1 ? "s" : ""}`}
+                                    aria-label={`${referralCount} referral${referralCount > 1 ? "s" : ""}`}
                                 >
-                                    <Users className="h-3 w-3" />
-                                    {referralCount}
+                                    <Users className="h-3 w-3" aria-hidden="true" />
+                                    <span aria-hidden="true">{referralCount}</span>
                                 </span>
                             )}
                             {interviewCount > 0 && (
                                 <span
                                     className="flex items-center gap-0.5 text-orange-600"
-                                    title={`${interviewCount} interview${interviewCount > 1 ? "s" : ""}`}
+                                    aria-label={`${interviewCount} interview${interviewCount > 1 ? "s" : ""}`}
                                 >
-                                    <Briefcase className="h-3 w-3" />
-                                    {interviewCount}
+                                    <Briefcase className="h-3 w-3" aria-hidden="true" />
+                                    <span aria-hidden="true">{interviewCount}</span>
                                 </span>
                             )}
                         </div>
                     </div>
 
-                    {/* ---- Row 4: Action icons on hover ---- */}
-                    <div className="flex items-center gap-1 pt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* ---- Row 4: Action icons on hover / focus ---- */}
+                    <div className="flex items-center gap-1 pt-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                         <Button
                             variant="ghost"
                             size="icon"
@@ -314,9 +321,9 @@ export const ApplicationCard = React.memo(function ApplicationCard({
                                 e.stopPropagation();
                                 onClick?.();
                             }}
-                            aria-label="View details"
+                            aria-label={`View details for ${app.job.title} at ${app.job.company}`}
                         >
-                            <Eye className="h-3 w-3" />
+                            <Eye className="h-3 w-3" aria-hidden="true" />
                         </Button>
                         <Button
                             variant="ghost"
@@ -326,9 +333,9 @@ export const ApplicationCard = React.memo(function ApplicationCard({
                                 e.stopPropagation();
                                 onEdit?.();
                             }}
-                            aria-label="Edit"
+                            aria-label={`Edit ${app.job.title} at ${app.job.company}`}
                         >
-                            <Edit2 className="h-3 w-3" />
+                            <Edit2 className="h-3 w-3" aria-hidden="true" />
                         </Button>
                         <Button
                             variant="ghost"
@@ -338,9 +345,9 @@ export const ApplicationCard = React.memo(function ApplicationCard({
                                 e.stopPropagation();
                                 setDeleteOpen(true);
                             }}
-                            aria-label="Delete"
+                            aria-label={`Delete ${app.job.title} at ${app.job.company}`}
                         >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-3 w-3" aria-hidden="true" />
                         </Button>
                     </div>
                 </CardContent>

@@ -246,6 +246,54 @@
   }
 }
 
+/* ── Skip-to-content link (keyboard accessibility) ── */
+.skip-link {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  z-index: 9999;
+  padding: 0.5rem 1.25rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.skip-link:focus-visible {
+  top: 1rem;
+  left: 1rem;
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* ── Reduced-motion: disable all animations / transitions ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Freeze shimmer skeleton — fall back to a static muted swatch */
+  .animate-shimmer {
+    animation: none !important;
+    background-image: none !important;
+    background-color: hsl(var(--muted));
+  }
+
+  /* Keep pulse skeletons static */
+  .animate-pulse {
+    animation: none !important;
+    opacity: 0.6;
+  }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

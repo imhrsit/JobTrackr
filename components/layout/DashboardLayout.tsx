@@ -35,6 +35,11 @@ export function DashboardLayout({ children, applicationCount = 0 }: DashboardLay
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
+      {/* Skip to main content — first focusable element */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       {/* Desktop sidebar */}
       <div className="hidden md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:w-64 md:flex-col">
         <Sidebar applicationCount={applicationCount} />
@@ -44,17 +49,22 @@ export function DashboardLayout({ children, applicationCount = 0 }: DashboardLay
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden"
-          aria-hidden
+          aria-hidden="true"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Mobile drawer */}
       <div
+        id="mobile-nav-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 transform bg-background transition-transform duration-200 ease-in-out md:hidden",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        hidden={!sidebarOpen}
       >
         <Sidebar applicationCount={applicationCount} onClose={() => setSidebarOpen(false)} />
       </div>
@@ -63,9 +73,10 @@ export function DashboardLayout({ children, applicationCount = 0 }: DashboardLay
       <div className="flex flex-1 flex-col md:pl-64">
         <Header
           onMenuClick={() => setSidebarOpen((o) => !o)}
+          sidebarOpen={sidebarOpen}
           notificationCount={0}
         />
-        <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
+        <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
           {children}
         </main>
         <MobileNav />

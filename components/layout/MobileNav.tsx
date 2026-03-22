@@ -32,6 +32,7 @@ export function MobileNav() {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
               "relative flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium transition-colors",
               isActive
@@ -40,9 +41,12 @@ export function MobileNav() {
             )}
           >
             {isActive && (
-              <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary" />
+              <span
+                className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary"
+                aria-hidden="true"
+              />
             )}
-            <item.icon className={cn("h-5 w-5", isActive && "text-primary")} />
+            <item.icon className={cn("h-5 w-5", isActive && "text-primary")} aria-hidden="true" />
             <span>{item.label}</span>
           </Link>
         );
