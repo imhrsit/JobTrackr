@@ -45,10 +45,10 @@ export interface UserPreferences {
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
     notifications: {
-        statusChanges: true,
-        interviewReminders: true,
+        statusChanges: false,
+        interviewReminders: false,
         referralFollowUps: false,
-        weeklySummary: true,
+        weeklySummary: false,
         monthlyInsights: false,
     },
     display: {

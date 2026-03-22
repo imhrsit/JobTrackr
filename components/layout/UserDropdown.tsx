@@ -6,7 +6,6 @@ import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import {
     User,
-    Settings,
     HelpCircle,
     LogOut,
     Sun,
@@ -154,15 +153,6 @@ export function UserDropdown({ align = "end" }: UserDropdownProps) {
                         >
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span>Manage Account</span>
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link
-                            href="/settings"
-                            className="flex items-center gap-2 cursor-pointer"
-                        >
-                            <Settings className="h-4 w-4 text-muted-foreground" />
-                            <span>Settings</span>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem

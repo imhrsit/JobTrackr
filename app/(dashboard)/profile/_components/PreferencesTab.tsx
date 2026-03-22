@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { toast } from "@/lib/toast";
-import { Loader2, Sun, Moon, Monitor, LayoutGrid, List, Table2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sun, Moon, Monitor, LayoutGrid, List, Table2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -33,18 +31,21 @@ interface ToggleGroupProps<T extends string> {
     value: T;
     onChange: (v: T) => void;
     options: { value: T; label: string; icon?: React.ReactNode }[];
+    disabled?: boolean;
 }
 
-function ToggleGroup<T extends string>({ value, onChange, options }: ToggleGroupProps<T>) {
+function ToggleGroup<T extends string>({ value, onChange, options, disabled }: ToggleGroupProps<T>) {
     return (
-        <div className="flex items-center border rounded-lg overflow-hidden w-fit">
+        <div className={cn("flex items-center border rounded-lg overflow-hidden w-fit", disabled && "opacity-50 cursor-not-allowed")}>
             {options.map((opt) => (
                 <button
                     key={opt.value}
                     type="button"
-                    onClick={() => onChange(opt.value)}
+                    onClick={() => !disabled && onChange(opt.value)}
+                    disabled={disabled}
                     className={cn(
                         "flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors",
+                        disabled ? "cursor-not-allowed" : "cursor-pointer",
                         value === opt.value
                             ? "bg-primary text-primary-foreground"
                             : "hover:bg-muted text-muted-foreground"
@@ -58,6 +59,14 @@ function ToggleGroup<T extends string>({ value, onChange, options }: ToggleGroup
     );
 }
 
+function ComingSoonBadge() {
+    return (
+        <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+            Coming soon
+        </span>
+    );
+}
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -67,14 +76,12 @@ interface Props {
     onUpdate: () => void;
 }
 
-export function PreferencesTab({ user, onUpdate }: Props) {
+export function PreferencesTab({ user }: Props) {
     const { theme, setTheme } = useTheme();
-    const [saving, setSaving] = useState(false);
 
     const currentPrefs = mergePreferences(user.preferences, {});
-
-    const [notifications, setNotifications] = useState(currentPrefs.notifications);
-    const [display, setDisplay] = useState(currentPrefs.display);
+    const [notifications] = useState(currentPrefs.notifications);
+    const [display] = useState(currentPrefs.display);
 
     const NOTIFICATION_ITEMS: { key: keyof typeof notifications; label: string; description: string }[] = [
         { key: "statusChanges", label: "Application status changes", description: "When an application's status is updated" },
@@ -83,26 +90,6 @@ export function PreferencesTab({ user, onUpdate }: Props) {
         { key: "weeklySummary", label: "Weekly summary", description: "A weekly digest of your job search activity" },
         { key: "monthlyInsights", label: "Monthly insights", description: "Monthly analytics and recommendations" },
     ];
-
-    const handleSave = async () => {
-        setSaving(true);
-        try {
-            const res = await fetch("/api/users/profile", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    preferences: { notifications, display },
-                }),
-            });
-            if (!res.ok) throw new Error("Failed to save");
-            toast.success("Preferences saved");
-            onUpdate();
-        } catch {
-            toast.error("Failed to save preferences");
-        } finally {
-            setSaving(false);
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -135,14 +122,18 @@ export function PreferencesTab({ user, onUpdate }: Props) {
 
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div>
-                            <p className="text-sm font-medium">Default View</p>
+                            <p className="text-sm font-medium flex items-center gap-2">
+                                Default View
+                                <ComingSoonBadge />
+                            </p>
                             <p className="text-xs text-muted-foreground">
                                 How applications are displayed on the board
                             </p>
                         </div>
                         <ToggleGroup
                             value={display.defaultView}
-                            onChange={(v) => setDisplay((d) => ({ ...d, defaultView: v }))}
+                            onChange={() => {}}
+                            disabled
                             options={[
                                 { value: "kanban", label: "Kanban", icon: <LayoutGrid className="h-3.5 w-3.5" /> },
                                 { value: "list", label: "List", icon: <List className="h-3.5 w-3.5" /> },
@@ -155,8 +146,9 @@ export function PreferencesTab({ user, onUpdate }: Props) {
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <Label htmlFor="compact-mode" className="text-sm font-medium cursor-pointer">
+                            <Label htmlFor="compact-mode" className="text-sm font-medium flex items-center gap-2">
                                 Compact Mode
+                                <ComingSoonBadge />
                             </Label>
                             <p className="text-xs text-muted-foreground mt-0.5">
                                 Reduce card padding for a denser layout
@@ -165,18 +157,21 @@ export function PreferencesTab({ user, onUpdate }: Props) {
                         <Switch
                             id="compact-mode"
                             checked={display.compactMode}
-                            onCheckedChange={(v) => setDisplay((d) => ({ ...d, compactMode: v }))}
+                            disabled
                         />
                     </div>
                 </CardContent>
             </Card>
 
             {/* ── Notifications ── */}
-            <Card>
+            <Card className="opacity-60">
                 <CardHeader>
-                    <CardTitle className="text-base">Notifications</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        Notifications
+                        <ComingSoonBadge />
+                    </CardTitle>
                     <CardDescription>
-                        Configure which email notifications you receive.
+                        Email notifications are not yet active. These settings will take effect in a future update.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -186,7 +181,7 @@ export function PreferencesTab({ user, onUpdate }: Props) {
                                 <div>
                                     <Label
                                         htmlFor={`notif-${item.key}`}
-                                        className="text-sm font-medium cursor-pointer"
+                                        className="text-sm font-medium"
                                     >
                                         {item.label}
                                     </Label>
@@ -197,9 +192,7 @@ export function PreferencesTab({ user, onUpdate }: Props) {
                                 <Switch
                                     id={`notif-${item.key}`}
                                     checked={notifications[item.key]}
-                                    onCheckedChange={(v) =>
-                                        setNotifications((n) => ({ ...n, [item.key]: v }))
-                                    }
+                                    disabled
                                 />
                             </div>
                             {i < NOTIFICATION_ITEMS.length - 1 && (
@@ -225,14 +218,6 @@ export function PreferencesTab({ user, onUpdate }: Props) {
                 </CardHeader>
             </Card>
 
-            <Separator />
-
-            <div className="flex justify-end">
-                <Button onClick={handleSave} disabled={saving}>
-                    {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    Save Preferences
-                </Button>
-            </div>
         </div>
     );
 }

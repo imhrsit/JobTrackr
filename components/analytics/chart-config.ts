@@ -37,20 +37,22 @@ export const ALL_STATUSES: ApplicationStatus[] = [
 
 export const CHART_TOOLTIP_STYLE: React.CSSProperties = {
     borderRadius: "8px",
-    border: "1px solid hsl(var(--border))",
-    backgroundColor: "hsl(var(--card))",
-    color: "hsl(var(--foreground))",
+    border: "1px solid var(--border)",
+    backgroundColor: "var(--card)",
+    color: "var(--foreground)",
     fontSize: "12px",
     boxShadow: "0 4px 12px rgba(0,0,0,.08)",
 };
 
+// SVG fill/stroke attributes support CSS custom properties directly.
+// Do NOT wrap with hsl() — the variables already contain complete color values.
 export const AXIS_TICK_STYLE: React.SVGAttributes<SVGTextElement> = {
-    fill: "hsl(var(--muted-foreground))",
+    fill: "var(--muted-foreground)",
 };
 
 export const CHART_GRID_STYLE = {
     strokeDasharray: "3 3",
-    stroke: "hsl(var(--border))",
+    stroke: "var(--border)",
     opacity: 0.5,
 } as const;
 

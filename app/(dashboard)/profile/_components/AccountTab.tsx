@@ -88,6 +88,38 @@ const passwordSchema = z
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
+// Defined at module scope so React never sees a new component type on re-render,
+// which would cause the input to unmount/remount and lose focus.
+function PasswordInput({
+    field,
+    show,
+    toggle,
+    placeholder,
+}: {
+    field: React.ComponentProps<"input">;
+    show: boolean;
+    toggle: () => void;
+    placeholder?: string;
+}) {
+    return (
+        <div className="relative">
+            <Input
+                {...field}
+                type={show ? "text" : "password"}
+                placeholder={placeholder}
+                className="pr-10"
+            />
+            <button
+                type="button"
+                onClick={toggle}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+                {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+        </div>
+    );
+}
+
 function PasswordCard() {
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
@@ -122,34 +154,6 @@ function PasswordCard() {
             setSaving(false);
         }
     };
-
-    const PasswordInput = ({
-        field,
-        show,
-        toggle,
-        placeholder,
-    }: {
-        field: React.ComponentProps<"input">;
-        show: boolean;
-        toggle: () => void;
-        placeholder?: string;
-    }) => (
-        <div className="relative">
-            <Input
-                {...field}
-                type={show ? "text" : "password"}
-                placeholder={placeholder}
-                className="pr-10"
-            />
-            <button
-                type="button"
-                onClick={toggle}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-                {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-        </div>
-    );
 
     return (
         <Card>

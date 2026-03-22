@@ -7,7 +7,6 @@ import {
   Briefcase,
   BarChart3,
   User,
-  Settings,
   HelpCircle,
   LogOut,
 } from "lucide-react";
@@ -16,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { signOut } from "next-auth/react";
+import { toast } from "@/lib/toast";
 
 const mainNav = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -25,8 +25,7 @@ const mainNav = [
 ];
 
 const bottomNav = [
-  { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/help", label: "Help & Feedback", icon: HelpCircle },
+  { label: "Help & Feedback", icon: HelpCircle },
 ];
 
 interface SidebarProps {
@@ -95,21 +94,21 @@ export function Sidebar({ applicationCount = 0, onClose, className }: SidebarPro
       </nav>
 
       <div className="border-t p-4 space-y-1">
-        {bottomNav.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              aria-current={isActive ? "page" : undefined}
-              className={linkClass(item.href)}
-            >
-              <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {item.label}
-            </Link>
-          );
-        })}
+        {bottomNav.map((item) => (
+          <button
+            key={item.label}
+            onClick={() => {
+              onClose?.();
+              toast.info("Help & Feedback coming soon!");
+            }}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground"
+            )}
+          >
+            <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {item.label}
+          </button>
+        ))}
         <Separator className="my-2" />
         <Button
           variant="ghost"

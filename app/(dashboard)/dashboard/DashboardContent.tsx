@@ -508,8 +508,8 @@ function QuickInsights({
                             <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="fillArea" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <XAxis
@@ -517,28 +517,28 @@ function QuickInsights({
                                     tickLine={false}
                                     axisLine={false}
                                     fontSize={11}
-                                    tick={{ fill: "hsl(var(--muted-foreground))" }}
+                                    tick={{ fill: "var(--muted-foreground)" }}
                                     interval="preserveStartEnd"
                                 />
                                 <YAxis
                                     tickLine={false}
                                     axisLine={false}
                                     fontSize={11}
-                                    tick={{ fill: "hsl(var(--muted-foreground))" }}
+                                    tick={{ fill: "var(--muted-foreground)" }}
                                     allowDecimals={false}
                                 />
                                 <Tooltip
                                     contentStyle={{
                                         borderRadius: "8px",
-                                        border: "1px solid hsl(var(--border))",
-                                        backgroundColor: "hsl(var(--card))",
+                                        border: "1px solid var(--border)",
+                                        backgroundColor: "var(--card)",
                                         fontSize: "12px",
                                     }}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="count"
-                                    stroke="hsl(var(--primary))"
+                                    stroke="var(--primary)"
                                     fill="url(#fillArea)"
                                     strokeWidth={2}
                                 />
