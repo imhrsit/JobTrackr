@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import { requireAuth } from "@/lib/auth";
-import ApplicationsBoard from "./ApplicationsBoard";
+import ApplicationsBoard, { BoardSkeleton } from "./ApplicationsBoard";
 
 export default async function ApplicationsPage() {
     await requireAuth();
 
     return (
-        <Suspense>
+        <Suspense fallback={<BoardSkeleton />}>
             <ApplicationsBoard />
         </Suspense>
     );

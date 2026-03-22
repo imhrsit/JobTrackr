@@ -4,13 +4,23 @@ import { getToken } from "next-auth/jwt";
 
 const publicRoutes = ["/", "/login", "/signup", "/terms", "/privacy"];
 const authRoutes = ["/login", "/signup"];
+// All route prefixes that require authentication (mirrors app/(dashboard)/ structure)
+const protectedPrefixes = [
+  "/dashboard",
+  "/applications",
+  "/analytics",
+  "/profile",
+  "/jobs",
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   const isPublicRoute = publicRoutes.includes(pathname);
-  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isDashboardRoute = protectedPrefixes.some((prefix) =>
+    pathname === prefix || pathname.startsWith(prefix + "/")
+  );
   const isApiRoute = pathname.startsWith("/api");
   const isAuthApiRoute = pathname.startsWith("/api/auth");
 
@@ -59,16 +69,38 @@ export async function middleware(request: NextRequest) {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()"
   );
+  response.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-eval needed for Next.js dev; tighten post-launch
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https://*.amazonaws.com https://images.unsplash.com",
+      "connect-src 'self'",
+      "frame-ancestors 'none'",
+    ].join("; ")
+  );
 
   return response;
 }
 
 export const config = {
   matcher: [
+    // Protected app routes
     "/dashboard",
     "/dashboard/:path*",
+    "/applications",
+    "/applications/:path*",
+    "/analytics",
+    "/analytics/:path*",
+    "/profile",
+    "/profile/:path*",
+    "/jobs",
+    "/jobs/:path*",
+    // API routes (all protected except /api/auth/*)
     "/api/:path*",
-    "/(auth)/:path*",
+    // Auth page routes (redirect to dashboard if already logged in)
     "/login",
     "/signup",
   ],

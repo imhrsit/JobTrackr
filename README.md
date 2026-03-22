@@ -1,70 +1,154 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JobTrackr
 
-## Getting Started
+A full-stack job application tracker built with Next.js 16, React 19, Prisma and PostgreSQL.
 
-First, run the development server:
+Track every stage of your job search from saved postings through offers with a Kanban board, referral tracking, interview scheduling and analytics.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 |
+| Database | PostgreSQL + Prisma ORM |
+| Auth | NextAuth.js (credentials + JWT) |
+| Styling | Tailwind CSS 4 |
+| State | TanStack React Query 5 |
+| Drag & Drop | @dnd-kit |
+| Charts | Recharts |
+| UI Components | Radix UI + shadcn/ui |
+| Validation | Zod |
+
+---
+
+## Prerequisites
+
+- Node.js 18+
+- PostgreSQL 14+
+- pnpm / npm / yarn / bun
+
+---
+
+## Local Setup
+
+### 1. Clone and install
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repo-url>
+cd jobtrackr
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Database Setup
-
-This project uses PostgreSQL as the database. Make sure to have it installed and running on your local machine.
-
-### Environment Variables
-
-Create a `.env.local` file in the root of the project and add the following:
+Edit `.env.local`:
 
 ```dotenv
-DATABASE_URL="postgresql://<username>:<password>@localhost:5432/jobtrackr"
+# PostgreSQL connection
+DATABASE_URL="postgresql://user:password@localhost:5432/jobtrackr"
+
+# NextAuth — use a strong random string in production
+# Generate with: openssl rand -base64 32
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-random-secret-here"
+
+# OAuth (optional)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
 ```
 
-Replace `<username>` and `<password>` with your PostgreSQL credentials.
-
-### Seeding the Database
-
-To seed the database with initial data, run:
+### 3. Set up the database
 
 ```bash
+# Push schema to database (development)
+npm run db:push
+
+# Or run migrations (recommended for production)
+npm run db:migrate
+
+# Seed with demo data
 npm run db:seed
 ```
 
-This will create a demo user and populate the database with sample skills and jobs.
-
-## Prisma Client
-
-The project uses Prisma as an ORM. To generate the Prisma Client, run:
+### 4. Start development server
 
 ```bash
-npm run db:generate
+npm run dev
 ```
 
-This will generate the client based on the schema defined in `prisma/schema.prisma`.
+Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `NEXTAUTH_URL` | Yes | Full URL of the app (e.g. `https://yourapp.com`) |
+| `NEXTAUTH_SECRET` | Yes | Random secret for JWT signing |
+| `GOOGLE_CLIENT_ID` | No | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | No | Google OAuth client secret |
+| `NODE_ENV` | No | `development` \| `production` |
+
+---
+
+## Available Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run db:generate` | Regenerate Prisma client |
+| `npm run db:push` | Sync schema without migrations |
+| `npm run db:migrate` | Run migrations |
+| `npm run db:studio` | Open Prisma Studio |
+| `npm run db:seed` | Seed database with demo data |
+
+---
+
+## Project Structure
+
+```
+app/
+  (auth)/          # Login and signup pages
+  (dashboard)/     # All authenticated app pages
+    dashboard/     # Overview stats and charts
+    applications/  # Kanban board
+    analytics/     # Application funnel analytics
+    jobs/[jobId]/  # Job detail page with tabs
+    profile/       # User profile and settings
+  api/             # API routes
+components/
+  applications/    # Kanban board, card, detail tabs
+  analytics/       # Chart components
+  layout/          # Sidebar, header, mobile nav
+  ui/              # shadcn/ui base components + skeletons
+lib/               # Prisma client, auth, utilities
+prisma/
+  schema.prisma    # Database schema
+  migrations/      # Migration history
+  seed.ts          # Demo seed data
+```
+
+---
+
+## Features
+
+- **Kanban board** — Drag applications across SAVED → APPLIED → REFERRED → INTERVIEWING → OFFERED → REJECTED
+- **Referral tracking** — Track referral requests and status per application
+- **Interview scheduling** — Log upcoming and past interviews with types and notes
+- **Skills matching** — Tag skills per job and track proficiency
+- **Analytics** — Application funnel, status distribution, applications over time
+- **Activity log** — Automatic audit trail of status changes and updates
+- **Document notes** — Cover letter and resume version tracking
+- **Dark mode** — System-aware theme switching
+- **Keyboard accessible** — Full keyboard navigation and screen reader support

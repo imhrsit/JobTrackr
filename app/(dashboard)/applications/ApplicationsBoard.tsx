@@ -219,7 +219,7 @@ export default function ApplicationsBoard() {
 // Skeleton
 // ============================================================================
 
-function BoardSkeleton() {
+export function BoardSkeleton() {
     return (
         <div className="flex gap-4 overflow-hidden pb-4">
             {Array.from({ length: 6 }).map((_, i) => (
