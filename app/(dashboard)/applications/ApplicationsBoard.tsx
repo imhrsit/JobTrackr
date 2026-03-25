@@ -13,6 +13,7 @@ import { ListView } from "@/components/applications/ListView";
 import { TableView } from "@/components/applications/TableView";
 import { SearchAndFilters } from "@/components/applications/SearchAndFilters";
 import { JobDialog } from "@/components/jobs/JobDialog";
+import { EditApplicationDialog } from "@/components/applications/EditApplicationDialog";
 import { useApplicationSearch } from "@/hooks/useApplicationSearch";
 import { paramsToFilters } from "@/lib/url-sync";
 import type {
@@ -98,6 +99,7 @@ export default function ApplicationsBoard() {
     } = useApplicationSearch({ initialSearch, initialFilters });
 
     const [jobDialogOpen, setJobDialogOpen] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     // Board data (grouped by status) — only needed for kanban view
     const board = useMemo(() => groupByStatus(applications), [applications]);
@@ -136,7 +138,7 @@ export default function ApplicationsBoard() {
     const isFilteredEmpty = !isLoading && totalApps === 0 && hasSearchOrFilter;
     const visibleStatuses = filters.status?.length ? filters.status : undefined;
 
-    const handleEdit = (id: string) => router.push(`/jobs/${id}`);
+    const handleEdit = (id: string) => setEditingId(id);
 
     return (
         <div className="space-y-4 animate-in fade-in duration-300">
@@ -265,6 +267,14 @@ export default function ApplicationsBoard() {
             <JobDialog
                 open={jobDialogOpen}
                 onClose={() => setJobDialogOpen(false)}
+            />
+
+            {/* ======== Edit Dialog ======== */}
+            <EditApplicationDialog
+                applicationId={editingId}
+                open={!!editingId}
+                onClose={() => setEditingId(null)}
+                onSuccess={() => queryClient.invalidateQueries({ queryKey })}
             />
         </div>
     );

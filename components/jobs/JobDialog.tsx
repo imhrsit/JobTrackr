@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,7 +12,7 @@ import {
     Building,
     Link as LinkIcon,
     MapPin,
-    DollarSign,
+
     CalendarDays,
     FileText,
     Loader2,
@@ -93,8 +93,8 @@ const jobFormSchema = z.object({
         .max(100, "Company must be 100 characters or less"),
     jobUrl: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
     location: z.string().max(200).optional().or(z.literal("")),
-    workMode: z.enum(["REMOTE", "HYBRID", "ONSITE"]),
-    salaryCurrency: z.string().default("USD"),
+    workMode: z.enum(["REMOTE", "HYBRID", "ONSITE"]).default("ONSITE"),
+    salaryCurrency: z.string().default("INR"),
     salaryMin: z.coerce.number().int().positive().optional(),
     salaryMax: z.coerce.number().int().positive().optional(),
     description: z.string().optional().or(z.literal("")),
@@ -117,7 +117,7 @@ const jobFormSchema = z.object({
 
 type JobFormValues = z.infer<typeof jobFormSchema>;
 
-const DRAFT_KEY = "jobtrackr_job_draft";
+
 
 const CURRENCIES = [
     { value: "USD", label: "USD ($)" },
@@ -127,6 +127,15 @@ const CURRENCIES = [
     { value: "CAD", label: "CAD (C$)" },
     { value: "AUD", label: "AUD (A$)" },
 ];
+
+const CURRENCY_SYMBOLS: Record<string, string> = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    INR: "₹",
+    CAD: "C$",
+    AUD: "A$",
+};
 
 const STATUS_OPTIONS = [
     { value: "SAVED", label: "Saved" },
@@ -148,7 +157,7 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
     const [skillSearch, setSkillSearch] = useState("");
     const [skillOptions, setSkillOptions] = useState<SkillOption[]>([]);
     const [skillsOpen, setSkillsOpen] = useState(false);
-    const draftTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
     const form = useForm<JobFormValues>({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -158,15 +167,15 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
             company: "",
             jobUrl: "",
             location: "",
-            workMode: "REMOTE",
-            salaryCurrency: "USD",
+            workMode: "ONSITE",
+            salaryCurrency: "INR",
             salaryMin: undefined,
             salaryMax: undefined,
             description: "",
             requirements: "",
-            postedDate: null,
-            status: "SAVED",
-            appliedDate: null,
+            postedDate: new Date(),
+            status: "APPLIED",
+            appliedDate: new Date(),
             resumeVersion: "",
             coverLetter: "",
             notes: "",
@@ -176,57 +185,10 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
 
     const watchStatus = form.watch("status");
     const watchHasCoverLetter = form.watch("hasCoverLetter");
+    const watchCurrency = form.watch("salaryCurrency");
+    const currencySymbol = CURRENCY_SYMBOLS[watchCurrency] || watchCurrency;
 
-    // ---- Draft auto-save (every 30s) ----
-    useEffect(() => {
-        if (!open) return;
 
-        draftTimerRef.current = setInterval(() => {
-            const values = form.getValues();
-            try {
-                localStorage.setItem(
-                    DRAFT_KEY,
-                    JSON.stringify({
-                        ...values,
-                        postedDate: values.postedDate?.toISOString() ?? null,
-                        appliedDate: values.appliedDate?.toISOString() ?? null,
-                        skills,
-                    })
-                );
-            } catch {
-                // localStorage full or unavailable — ignore
-            }
-        }, 30_000);
-
-        return () => {
-            if (draftTimerRef.current) clearInterval(draftTimerRef.current);
-        };
-    }, [open, form, skills]);
-
-    // ---- Restore draft on open ----
-    useEffect(() => {
-        if (!open) return;
-
-        try {
-            const raw = localStorage.getItem(DRAFT_KEY);
-            if (!raw) return;
-            const draft = JSON.parse(raw);
-
-            form.reset({
-                ...draft,
-                postedDate: draft.postedDate ? new Date(draft.postedDate) : null,
-                appliedDate: draft.appliedDate ? new Date(draft.appliedDate) : null,
-                salaryMin: draft.salaryMin ?? undefined,
-                salaryMax: draft.salaryMax ?? undefined,
-            });
-
-            if (draft.skills) setSkills(draft.skills);
-        } catch {
-            // corrupt draft — ignore
-        }
-        // Only run on open change
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open]);
 
     // ---- Skills search ----
     const fetchSkills = useCallback(async (search: string) => {
@@ -277,35 +239,10 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
         );
     };
 
-    // ---- Clear draft ----
-    const clearDraft = () => {
-        try {
-            localStorage.removeItem(DRAFT_KEY);
-        } catch {
-            // ignore
-        }
-    };
-
-    // ---- Close with unsaved changes warning ----
+    // ---- Close handler ----
     const handleClose = () => {
-        if (form.formState.isDirty) {
-            // Save as draft before closing
-            const values = form.getValues();
-            try {
-                localStorage.setItem(
-                    DRAFT_KEY,
-                    JSON.stringify({
-                        ...values,
-                        postedDate: values.postedDate?.toISOString() ?? null,
-                        appliedDate: values.appliedDate?.toISOString() ?? null,
-                        skills,
-                    })
-                );
-                toast.info("Draft saved. Your progress will be restored next time.");
-            } catch {
-                // ignore
-            }
-        }
+        form.reset();
+        setSkills([]);
         onClose();
     };
 
@@ -351,7 +288,7 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
                 throw new Error(body.message || "Failed to create job");
             }
 
-            clearDraft();
+
             form.reset();
             setSkills([]);
 
@@ -507,9 +444,7 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
                                         name="workMode"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>
-                                                    Work Mode <span className="text-destructive">*</span>
-                                                </FormLabel>
+                                                <FormLabel>Work Mode</FormLabel>
                                                 <Select
                                                     onValueChange={field.onChange}
                                                     defaultValue={field.value}
@@ -579,7 +514,7 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
                                                 <FormLabel>Min Salary</FormLabel>
                                                 <FormControl>
                                                     <div className="relative">
-                                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">{currencySymbol}</span>
                                                         <Input
                                                             type="number"
                                                             placeholder="80000"
@@ -610,7 +545,7 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
                                                 <FormLabel>Max Salary</FormLabel>
                                                 <FormControl>
                                                     <div className="relative">
-                                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">{currencySymbol}</span>
                                                         <Input
                                                             type="number"
                                                             placeholder="120000"
@@ -1014,7 +949,6 @@ export function JobDialog({ open, onClose, onSuccess }: JobDialogProps) {
                             onClick={() => {
                                 form.reset();
                                 setSkills([]);
-                                clearDraft();
                             }}
                             className="mr-auto text-muted-foreground"
                         >

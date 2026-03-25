@@ -32,6 +32,7 @@ import type {
 } from "@/types/application";
 import { APPLICATION_STATUSES } from "@/types/application";
 import type { ApplicationStatus } from "@prisma/client";
+import { EditApplicationDialog } from "@/components/applications/EditApplicationDialog";
 
 // ============================================================================
 // Types
@@ -128,6 +129,9 @@ export const KanbanBoard = React.memo(function KanbanBoard({
     const [activeCard, setActiveCard] = useState<ApplicationCardData | null>(null);
     const originalStatusRef = useRef<ApplicationStatus | null>(null);
 
+    // ---- Edit dialog state ----
+    const [editingId, setEditingId] = useState<string | null>(null);
+
     // ---- Sensors ----
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -187,6 +191,52 @@ export const KanbanBoard = React.memo(function KanbanBoard({
         },
 
         // Re-fetch to ensure consistency after settle
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+            queryClient.invalidateQueries({ queryKey: ["analytics"] });
+        },
+    });
+
+    // ---- Delete mutation with optimistic removal ----
+    const deleteApp = useMutation({
+        mutationFn: async (applicationId: string) => {
+            const res = await fetch(`/api/applications/${applicationId}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.error || `HTTP ${res.status}`);
+            }
+            return res.json();
+        },
+
+        onMutate: async (applicationId) => {
+            await queryClient.cancelQueries({ queryKey });
+
+            const prev = queryClient.getQueryData<ApplicationsResponse>(queryKey);
+
+            if (prev) {
+                queryClient.setQueryData<ApplicationsResponse>(queryKey, {
+                    ...prev,
+                    applications: prev.applications.filter((a) => a.id !== applicationId),
+                });
+            }
+
+            return { prev };
+        },
+
+        onError: (_err, _vars, context) => {
+            if (context?.prev) {
+                queryClient.setQueryData(queryKey, context.prev);
+            }
+            toast.error("Failed to delete application.");
+        },
+
+        onSuccess: () => {
+            toast.success("Application deleted.");
+        },
+
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey });
             queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
@@ -257,6 +307,7 @@ export const KanbanBoard = React.memo(function KanbanBoard({
             : APPLICATION_STATUSES;
 
     return (
+        <>
         <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -284,7 +335,8 @@ export const KanbanBoard = React.memo(function KanbanBoard({
                                         application={card}
                                         isDragging={activeCard?.id === card.id}
                                         onClick={() => router.push(`/jobs/${card.id}`)}
-                                        onEdit={() => router.push(`/jobs/${card.id}`)}
+                                        onEdit={() => setEditingId(card.id)}
+                                        onDelete={() => deleteApp.mutate(card.id)}
                                     />
                                 </KanbanSortableItem>
                             ))}
@@ -304,5 +356,13 @@ export const KanbanBoard = React.memo(function KanbanBoard({
                 )}
             </DragOverlay>
         </DndContext>
+
+        <EditApplicationDialog
+            applicationId={editingId}
+            open={!!editingId}
+            onClose={() => setEditingId(null)}
+            onSuccess={() => queryClient.invalidateQueries({ queryKey })}
+        />
+        </>
     );
 });

@@ -8,8 +8,11 @@ const globalForPrisma = globalThis as unknown as {
     pool: Pool | undefined;
 };
 
+// Use DIRECT_URL (non-pooler) so Prisma interactive transactions work.
+// Neon's pooler (PgBouncer) runs in transaction mode and doesn't support
+// interactive transactions, causing P2028 errors.
 const pool = globalForPrisma.pool ?? new Pool({
-    connectionString: env.DATABASE_URL,
+    connectionString: env.DIRECT_URL ?? env.DATABASE_URL,
 });
 
 if (isDevelopment) {

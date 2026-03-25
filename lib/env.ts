@@ -6,6 +6,10 @@ const envSchema = z.object({
         .string()
         .min(1, "DATABASE_URL is required")
         .url("DATABASE_URL must be a valid URL"),
+    DIRECT_URL: z
+        .string()
+        .url("DIRECT_URL must be a valid URL")
+        .optional(),
 
     // NextAuth
     NEXTAUTH_URL: z
@@ -26,6 +30,7 @@ function validateEnv() {
     try {
         const env = envSchema.parse({
             DATABASE_URL: process.env.DATABASE_URL,
+            DIRECT_URL: process.env.DIRECT_URL,
             NEXTAUTH_URL: process.env.NEXTAUTH_URL,
             NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
             NODE_ENV: process.env.NODE_ENV,

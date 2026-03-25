@@ -11,8 +11,8 @@ const createJobSchema = z
     company: z.string().min(2).max(100),
     jobUrl: z.string().url().optional().or(z.literal("")),
     location: z.string().max(200).optional().or(z.literal("")),
-    workMode: z.enum(["REMOTE", "HYBRID", "ONSITE"]),
-    salaryCurrency: z.string().default("USD"),
+    workMode: z.enum(["REMOTE", "HYBRID", "ONSITE"]).default("ONSITE"),
+    salaryCurrency: z.string().default("INR"),
     salaryMin: z.number().int().positive().optional().nullable(),
     salaryMax: z.number().int().positive().optional().nullable(),
     description: z.string().optional().or(z.literal("")),
@@ -96,87 +96,82 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = createJobSchema.parse(body);
 
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Create the job
-      const job = await tx.job.create({
-        data: {
-          userId,
-          title: parsed.title,
-          company: parsed.company,
-          jobUrl: parsed.jobUrl || null,
-          location: parsed.location || null,
-          workMode: parsed.workMode,
-          salaryCurrency: parsed.salaryCurrency,
-          salaryMin: parsed.salaryMin ?? null,
-          salaryMax: parsed.salaryMax ?? null,
-          description: parsed.description || null,
-          requirements: parsed.requirements || null,
-          postedDate: parsed.postedDate ? new Date(parsed.postedDate) : null,
-        },
-      });
+    // 1. Create the job
+    const job = await prisma.job.create({
+      data: {
+        userId,
+        title: parsed.title,
+        company: parsed.company,
+        jobUrl: parsed.jobUrl || null,
+        location: parsed.location || null,
+        workMode: parsed.workMode,
+        salaryCurrency: parsed.salaryCurrency,
+        salaryMin: parsed.salaryMin ?? null,
+        salaryMax: parsed.salaryMax ?? null,
+        description: parsed.description || null,
+        requirements: parsed.requirements || null,
+        postedDate: parsed.postedDate ? new Date(parsed.postedDate) : null,
+      },
+    });
 
-      // 2. Create the application
-      const application = await tx.application.create({
-        data: {
-          userId,
-          jobId: job.id,
-          status: parsed.status,
-          appliedDate:
-            parsed.status !== "SAVED" && parsed.appliedDate
-              ? new Date(parsed.appliedDate)
-              : parsed.status !== "SAVED"
-                ? new Date()
-                : null,
-          resumeVersion: parsed.resumeVersion || null,
-          coverLetter: parsed.coverLetter || null,
-          notes: parsed.notes || null,
-        },
-      });
+    // 2. Create the application
+    const application = await prisma.application.create({
+      data: {
+        userId,
+        jobId: job.id,
+        status: parsed.status,
+        appliedDate:
+          parsed.status !== "SAVED" && parsed.appliedDate
+            ? new Date(parsed.appliedDate)
+            : parsed.status !== "SAVED"
+              ? new Date()
+              : null,
+        resumeVersion: parsed.resumeVersion || null,
+        coverLetter: parsed.coverLetter || null,
+        notes: parsed.notes || null,
+      },
+    });
 
-      // 3. Attach skills (create new ones if needed)
-      if (parsed.skills.length > 0) {
-        for (const skill of parsed.skills) {
-          let skillId = skill.id;
+    // 3. Attach skills (create new ones if needed)
+    if (parsed.skills.length > 0) {
+      for (const skill of parsed.skills) {
+        let skillId = skill.id;
 
-          if (!skillId) {
-            // Create or find skill by name
-            const existing = await tx.skill.findUnique({
-              where: { name: skill.name },
-            });
-            if (existing) {
-              skillId = existing.id;
-            } else {
-              const created = await tx.skill.create({
-                data: { name: skill.name },
-              });
-              skillId = created.id;
-            }
-          }
-
-          await tx.jobSkill.create({
-            data: {
-              jobId: job.id,
-              skillId,
-              isRequired: skill.isRequired,
-            },
+        if (!skillId) {
+          const existing = await prisma.skill.findUnique({
+            where: { name: skill.name },
           });
+          if (existing) {
+            skillId = existing.id;
+          } else {
+            const created = await prisma.skill.create({
+              data: { name: skill.name },
+            });
+            skillId = created.id;
+          }
         }
+
+        await prisma.jobSkill.create({
+          data: {
+            jobId: job.id,
+            skillId,
+            isRequired: skill.isRequired,
+          },
+        });
       }
+    }
 
-      // 4. Log activity
-      await tx.activity.create({
-        data: {
-          applicationId: application.id,
-          activityType: "job_created",
-          description: `Added ${parsed.title} at ${parsed.company}`,
-        },
-      });
-
-      return { job, application };
+    // 4. Log activity
+    await prisma.activity.create({
+      data: {
+        applicationId: application.id,
+        activityType: "job_created",
+        description: `Added ${parsed.title} at ${parsed.company}`,
+      },
     });
 
     return NextResponse.json(
-      { success: true, job: result.job, application: result.application },
+      { success: true, job, application },
       { status: 201 }
     );
   } catch (error) {

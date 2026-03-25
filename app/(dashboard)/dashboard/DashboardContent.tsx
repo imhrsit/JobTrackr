@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { toast } from "@/lib/toast";
@@ -52,6 +53,7 @@ import {
 } from "recharts";
 import type { DashboardData } from "@/types/dashboard";
 import type { ApplicationStatus, InterviewType } from "@prisma/client";
+import { EditApplicationDialog } from "@/components/applications/EditApplicationDialog";
 
 // ============================================================================
 // Props & Helpers
@@ -294,6 +296,8 @@ function RecentApplications({
 }: {
     applications: DashboardData["recentApplications"];
 }) {
+    const [editingId, setEditingId] = useState<string | null>(null);
+
     if (applications.length === 0) {
         return (
             <Card>
@@ -313,6 +317,7 @@ function RecentApplications({
     }
 
     return (
+        <>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Recent Applications</CardTitle>
@@ -373,10 +378,13 @@ function RecentApplications({
                                                     <Eye className="h-3.5 w-3.5" />
                                                 </Link>
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                                <Link href={`/jobs/${app.id}`}>
-                                                    <Pencil className="h-3.5 w-3.5" />
-                                                </Link>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={() => setEditingId(app.id)}
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" />
                                             </Button>
                                         </div>
                                     </TableCell>
@@ -387,6 +395,13 @@ function RecentApplications({
                 </Table>
             </CardContent>
         </Card>
+
+        <EditApplicationDialog
+            applicationId={editingId}
+            open={!!editingId}
+            onClose={() => setEditingId(null)}
+        />
+        </>
     );
 }
 
